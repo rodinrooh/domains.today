@@ -72,7 +72,7 @@ total = 0
 while True:
     res = (
         supabase.table("domains")
-        .select("id, domain")
+        .select("id, domain, date_added, shown")
         .is_("score", "null")
         .range(offset, offset + PAGE - 1)
         .execute()
@@ -81,7 +81,13 @@ while True:
     if not rows:
         break
 
-    scored = [{"id": r["id"], "score": score_domain(r["domain"])} for r in rows]
+    scored = [{
+        "id": r["id"],
+        "domain": r["domain"],
+        "date_added": r["date_added"],
+        "shown": r["shown"],
+        "score": score_domain(r["domain"]),
+    } for r in rows]
 
     BATCH = 500
     for i in range(0, len(scored), BATCH):
