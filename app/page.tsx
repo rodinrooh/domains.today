@@ -54,10 +54,10 @@ export default function Page() {
 
       <div style={{
         position: 'fixed',
-        top: 22,
-        left: 24,
+        top: 32,
+        left: 40,
         color: '#ffffff',
-        fontSize: 18,
+        fontSize: 22,
         fontWeight: 700,
         letterSpacing: '-0.5px',
         zIndex: 10,
@@ -137,7 +137,7 @@ export default function Page() {
                 lineHeight: '40px',
                 color: '#b0b0b0',
                 cursor: 'pointer',
-                textAlign: 'left',
+                textAlign: 'center',
               }}
               onMouseEnter={e => (e.currentTarget.style.color = '#ffffff')}
               onMouseLeave={e => (e.currentTarget.style.color = '#b0b0b0')}
