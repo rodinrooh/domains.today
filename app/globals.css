@@ -9,29 +9,33 @@
 }
 
 body {
-  background: #0c1018;
+  background: #141414;
 }
 
 @keyframes flipIn {
   from {
-    transform: perspective(300px) rotateX(-60deg);
+    transform: perspective(400px) rotateX(-70deg);
     opacity: 0;
   }
   to {
-    transform: perspective(300px) rotateX(0deg);
+    transform: perspective(400px) rotateX(0deg);
     opacity: 1;
   }
 }
 
 .flip-in {
-  animation: flipIn 0.35s ease-out forwards;
+  animation: flipIn 0.4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
   transform-origin: top center;
 }
 
 .arrivals-row:hover {
-  background: #162030 !important;
+  background: #222222 !important;
 }
 
 .arrivals-row:hover .domain-cell {
-  color: #f0f4ff !important;
+  color: #fff8ec !important;
+}
+
+input::placeholder {
+  color: #3a3a3a;
 }
