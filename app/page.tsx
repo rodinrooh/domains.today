@@ -7,10 +7,19 @@ type DomainRow = { id: number; domain: string }
 
 export default function Page() {
   const [domains, setDomains] = useState<DomainRow[]>([])
+  const [totalCount, setTotalCount] = useState<number>(0)
   const [search, setSearch] = useState('')
   const lastIdRef = useRef<number>(0)
 
   useEffect(() => {
+    // Fetch real total count (bypasses 1000-row limit)
+    supabase
+      .from('domains')
+      .select('*', { count: 'exact', head: true })
+      .eq('shown', true)
+      .then(({ count }) => { if (count) setTotalCount(count) })
+
+    // Fetch recent domains for the visible list (last 1000)
     supabase
       .from('domains')
       .select('id, domain')
@@ -33,6 +42,7 @@ export default function Page() {
       if (data?.length) {
         lastIdRef.current = data[data.length - 1].id
         setDomains(prev => [...[...data].reverse(), ...prev])
+        setTotalCount(prev => prev + data.length)
       }
     }, 1000)
 
@@ -48,6 +58,8 @@ export default function Page() {
     const pick = domains[Math.floor(Math.random() * domains.length)]
     window.open(`https://${pick.domain}`, '_blank')
   }
+
+  const displayCount = search ? filtered.length : totalCount
 
   return (
     <main style={{ background: '#000000', minHeight: '100vh' }}>
@@ -71,15 +83,15 @@ export default function Page() {
         <div style={{ textAlign: 'center', marginBottom: 48, marginTop: 40 }}>
 
           <div style={{ fontSize: 88, fontWeight: 800, color: '#ffffff', lineHeight: 1, letterSpacing: '-4px' }}>
-            {filtered.length.toLocaleString()}
+            {displayCount.toLocaleString()}
           </div>
 
           <div style={{ color: '#444444', fontSize: 13, fontWeight: 500, marginTop: 12, letterSpacing: '0.01em' }}>
-            {search ? 'domains matching your search' : 'domains registered today'}
+            {search ? 'domains matching your search' : 'domains registered'}
           </div>
 
           <div style={{ color: '#333333', fontSize: 12, fontWeight: 400, marginTop: 20, lineHeight: '20px', maxWidth: 300, margin: '20px auto 0' }}>
-            Every domain registered on the internet today, surfaced live. A new one appears every ~2 seconds.
+            Every domain registered on the internet, surfaced live. A new one appears every ~2 seconds.
           </div>
 
           <input
