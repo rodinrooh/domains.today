@@ -54,30 +54,30 @@ export default function Page() {
 
       <div style={{
         position: 'fixed',
-        top: 20,
+        top: 22,
         left: 24,
         color: '#ffffff',
         fontSize: 14,
-        fontWeight: 600,
-        letterSpacing: '-0.2px',
+        fontWeight: 700,
+        letterSpacing: '-0.3px',
         zIndex: 10,
       }}>
         domains.today
       </div>
 
-      <div style={{ maxWidth: 680, margin: '0 auto', padding: '60px 24px 40px' }}>
-        <div style={{ textAlign: 'center', marginBottom: 32 }}>
+      <div style={{ maxWidth: 600, margin: '0 auto', padding: '72px 24px 60px' }}>
+        <div style={{ textAlign: 'center', marginBottom: 48 }}>
 
-          <div style={{ fontSize: 72, fontWeight: 700, color: '#ffffff', lineHeight: 1, letterSpacing: '-2px' }}>
+          <div style={{ fontSize: 88, fontWeight: 800, color: '#ffffff', lineHeight: 1, letterSpacing: '-4px' }}>
             {filtered.length.toLocaleString()}
           </div>
 
-          <div style={{ color: '#555555', fontSize: 13, marginTop: 10 }}>
+          <div style={{ color: '#444444', fontSize: 13, fontWeight: 500, marginTop: 12, letterSpacing: '0.01em' }}>
             {search ? 'domains matching your search' : 'domains registered today'}
           </div>
 
-          <div style={{ color: '#383838', fontSize: 12, marginTop: 16, lineHeight: '18px', maxWidth: 340, margin: '16px auto 0' }}>
-            Every domain name registered on the internet today, surfaced in real time. A new domain appears every 2 seconds.
+          <div style={{ color: '#333333', fontSize: 12, fontWeight: 400, marginTop: 20, lineHeight: '20px', maxWidth: 300, margin: '20px auto 0' }}>
+            Every domain registered on the internet today, surfaced live. A new one appears every ~2 seconds.
           </div>
 
           <input
@@ -85,18 +85,20 @@ export default function Page() {
             onChange={e => setSearch(e.target.value)}
             placeholder="search domains..."
             style={{
-              marginTop: 20,
-              background: '#111111',
-              border: '1px solid #2a2a2a',
+              marginTop: 24,
+              background: 'transparent',
+              border: 'none',
+              borderBottom: '1px solid #2a2a2a',
               outline: 'none',
               color: '#ffffff',
-              padding: '8px 14px',
+              padding: '8px 0',
               width: '100%',
-              maxWidth: 340,
+              maxWidth: 300,
               fontFamily: 'inherit',
               fontSize: 13,
+              fontWeight: 400,
               display: 'block',
-              margin: '20px auto 0',
+              margin: '24px auto 0',
               textAlign: 'center',
             }}
           />
@@ -105,18 +107,19 @@ export default function Page() {
             onClick={openRandom}
             disabled={!domains.length}
             style={{
-              marginTop: 12,
+              marginTop: 16,
               background: 'none',
-              border: '1px solid #2a2a2a',
-              color: domains.length ? '#555555' : '#2a2a2a',
+              border: 'none',
+              color: domains.length ? '#444444' : '#222222',
               fontFamily: 'inherit',
-              fontSize: 13,
+              fontSize: 12,
+              fontWeight: 500,
               cursor: domains.length ? 'pointer' : 'default',
-              padding: '7px 20px',
-              display: 'inline-block',
+              padding: 0,
+              letterSpacing: '0.03em',
             }}
-            onMouseEnter={e => { if (domains.length) { e.currentTarget.style.color = '#ffffff'; e.currentTarget.style.borderColor = '#555555' } }}
-            onMouseLeave={e => { e.currentTarget.style.color = domains.length ? '#555555' : '#2a2a2a'; e.currentTarget.style.borderColor = '#2a2a2a' }}
+            onMouseEnter={e => { if (domains.length) e.currentTarget.style.color = '#ffffff' }}
+            onMouseLeave={e => { e.currentTarget.style.color = domains.length ? '#444444' : '#222222' }}
           >
             random ↗
           </button>
@@ -129,15 +132,15 @@ export default function Page() {
               key={d.id}
               onClick={() => window.open(`https://${d.domain}`, '_blank')}
               style={{
-                fontSize: 13,
-                lineHeight: '26px',
-                color: '#cccccc',
+                fontSize: 15,
+                fontWeight: 500,
+                lineHeight: '30px',
+                color: '#888888',
                 cursor: 'pointer',
                 textAlign: 'center',
-                fontFamily: 'monospace',
               }}
               onMouseEnter={e => (e.currentTarget.style.color = '#ffffff')}
-              onMouseLeave={e => (e.currentTarget.style.color = '#cccccc')}
+              onMouseLeave={e => (e.currentTarget.style.color = '#888888')}
             >
               {d.domain}
             </div>
