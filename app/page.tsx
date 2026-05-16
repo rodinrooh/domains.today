@@ -116,10 +116,10 @@ export default function Page() {
               fontSize: 13,
               fontWeight: 400,
               cursor: domains.length ? 'pointer' : 'default',
-              padding: '10px 24px',
+              padding: '7px 24px',
               display: 'inline-block',
-              width: '100%',
-              maxWidth: 300,
+              width: 'auto',
+              maxWidth: 160,
             }}
             onMouseEnter={e => { if (domains.length) { e.currentTarget.style.color = '#ffffff'; e.currentTarget.style.borderColor = '#555555' } }}
             onMouseLeave={e => { e.currentTarget.style.color = domains.length ? '#666666' : '#2a2a2a'; e.currentTarget.style.borderColor = '#2a2a2a' }}
