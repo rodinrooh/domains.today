@@ -9,27 +9,40 @@
 }
 
 body {
-  background: #141414;
+  background: #1e1e1e;
 }
 
-@keyframes flipIn {
-  from {
-    transform: perspective(400px) rotateX(-70deg);
-    opacity: 0;
-  }
-  to {
-    transform: perspective(400px) rotateX(0deg);
-    opacity: 1;
-  }
+/* Split-flap crease line through the middle of every row */
+.arrivals-row {
+  position: relative;
+}
+.arrivals-row::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 1px;
+  background: rgba(0, 0, 0, 0.55);
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* Flip animation: top half folds down, bottom reveals */
+@keyframes flipTop {
+  0%   { transform: perspective(500px) rotateX(0deg);    opacity: 1; }
+  49%  { transform: perspective(500px) rotateX(-90deg);  opacity: 0; }
+  50%  { transform: perspective(500px) rotateX(90deg);   opacity: 0; }
+  100% { transform: perspective(500px) rotateX(0deg);    opacity: 1; }
 }
 
 .flip-in {
-  animation: flipIn 0.4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-  transform-origin: top center;
+  animation: flipTop 0.45s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  transform-origin: center center;
 }
 
 .arrivals-row:hover {
-  background: #222222 !important;
+  background: #252525 !important;
 }
 
 .arrivals-row:hover .domain-cell {

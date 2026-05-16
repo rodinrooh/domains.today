@@ -15,7 +15,7 @@ function getSld(d: string) {
   return i >= 0 ? d.slice(0, i) : d
 }
 function formatArrived(ts: string | null) {
-  if (!ts) return '— — —'
+  if (!ts) return '---'
   return new Date(ts).toLocaleTimeString('en-US', {
     hour12: true, hour: 'numeric', minute: '2-digit', second: '2-digit',
     timeZone: 'America/Los_Angeles',
@@ -29,27 +29,29 @@ function formatClock(d: Date) {
 }
 
 // ── Palette ────────────────────────────────────────────────────────────────
-const GOLD    = '#f5c840'   // new arrivals — bright warm gold
-const AMBER   = '#e8a020'   // accent / gates / status
-const PAGE_BG = '#141414'
-const HDR_BG  = 'rgba(16,16,16,0.96)'
-const BOARD_BG = '#1c1c1c'
-const ROW_BG  = '#181818'
-const BORDER  = '#303030'
-const DIVIDER = '#222222'
+// NEW row (during flip): white domain + bright gold accents
+// ALL other rows: uniform amber — no dimming
+const AMBER_BRIGHT = '#f5c030'   // new arrivals domain (white-gold)
+const AMBER        = '#e8980a'   // all rows — domain name
+const AMBER_GATE   = '#c87e08'   // gate (.com etc)
+const AMBER_STATUS = '#a06008'   // STATUS col
+const TIME_COLOR   = '#aaaaaa'   // time col — legible gray, same for all rows
+const NEW_DOMAIN   = '#fff8ec'   // newest domain during animation
 
-// ── Layout constants ────────────────────────────────────────────────────────
-const MAX_W   = 960
-const HDR     = 162   // px — measured: title+sub+count+search+tabs
-const GAP     = 28
+const PAGE_BG   = '#1e1e1e'
+const HDR_BG    = 'rgba(22,22,22,0.96)'
+const GUTTER_BG = '#2a2a2a'      // board outer — peeks between rows as gutter
+const ROW_BG    = '#111111'      // individual row tile background
+const BORDER    = '#383838'
 
-// ── Grid columns ────────────────────────────────────────────────────────────
-const LIVE_COLS = 'minmax(0,1fr) 84px 148px 96px'
-const TOP_COLS  = '40px minmax(0,1fr) 84px 72px 96px'
-
-// ── Performance caps ────────────────────────────────────────────────────────
+const MAX_W      = 960
+const HDR        = 162
+const GAP        = 28
 const MAX_DISPLAY = 200
 const MAX_STATE   = 500
+
+const LIVE_COLS = 'minmax(0,1fr) 84px 148px 96px'
+const TOP_COLS  = '40px minmax(0,1fr) 84px 72px 96px'
 
 export default function Page() {
   const [domains, setDomains]   = useState<DomainRow[]>([])
@@ -102,7 +104,10 @@ export default function Page() {
       }
     }, 1000)
 
-    return () => { clearInterval(iv); if (newIdsTimerRef.current) clearTimeout(newIdsTimerRef.current) }
+    return () => {
+      clearInterval(iv)
+      if (newIdsTimerRef.current) clearTimeout(newIdsTimerRef.current)
+    }
   }, [])
 
   // Leaderboard
@@ -114,7 +119,7 @@ export default function Page() {
       .then(({ data }) => { if (data?.length) setLeader(data as LeaderRow[]); setLL(false) })
   }, [tab])
 
-  // Server-side search (350ms debounce, ilike covers full DB)
+  // Server-side search (350ms debounce)
   useEffect(() => {
     if (searchTimerRef.current) clearTimeout(searchTimerRef.current)
     if (!search) { setSearchResults([]); setSearching(false); return }
@@ -152,7 +157,7 @@ export default function Page() {
         background: HDR_BG,
         backdropFilter: 'blur(20px)',
         WebkitBackdropFilter: 'blur(20px)',
-        borderBottom: `1px solid ${BORDER}`,
+        borderBottom: `1px solid #2e2e2e`,
       }}>
         <div style={{ maxWidth: MAX_W, margin: '0 auto', padding: '18px 36px 0' }}>
 
@@ -162,7 +167,7 @@ export default function Page() {
               <div style={{ color: '#f0ede6', fontSize: 26, letterSpacing: '0.1em', lineHeight: 1, fontWeight: 700 }}>
                 INTERNET AIRPORT
               </div>
-              <div style={{ color: AMBER, fontSize: 11, letterSpacing: '0.28em', marginTop: 7 }}>
+              <div style={{ color: AMBER_BRIGHT, fontSize: 11, letterSpacing: '0.28em', marginTop: 7 }}>
                 INTERNATIONAL ARRIVALS
               </div>
               <div style={{ color: '#555', fontSize: 10, letterSpacing: '0.16em', marginTop: 5 }}>
@@ -170,7 +175,7 @@ export default function Page() {
               </div>
             </div>
             <div style={{ textAlign: 'right' }}>
-              <div style={{ color: GOLD, fontSize: 22, letterSpacing: '0.04em', fontWeight: 700 }}>
+              <div style={{ color: AMBER_BRIGHT, fontSize: 22, letterSpacing: '0.04em', fontWeight: 700 }}>
                 {now ? formatClock(now) : ' '}
               </div>
               <div style={{ color: '#444', fontSize: 9, letterSpacing: '0.28em', marginTop: 5 }}>
@@ -187,7 +192,7 @@ export default function Page() {
             style={{
               display: 'block', marginTop: 16, width: '100%',
               background: 'transparent', border: 'none',
-              borderBottom: `1px solid #2a2a2a`,
+              borderBottom: `1px solid #2e2e2e`,
               outline: 'none', color: '#888',
               fontSize: 11, letterSpacing: '0.12em',
               padding: '6px 0 8px', fontFamily: 'inherit',
@@ -195,12 +200,12 @@ export default function Page() {
           />
 
           {/* Tabs */}
-          <div style={{ display: 'flex', gap: 2 }}>
+          <div style={{ display: 'flex' }}>
             {(['live', 'top'] as const).map(t => (
               <button key={t} onClick={() => setTab(t)} style={{
                 background: 'transparent', border: 'none',
-                borderBottom: tab === t ? `2px solid ${AMBER}` : '2px solid transparent',
-                color: tab === t ? '#f0ede6' : '#3a3a3a',
+                borderBottom: tab === t ? `2px solid ${AMBER_BRIGHT}` : '2px solid transparent',
+                color: tab === t ? '#f0ede6' : '#444',
                 fontFamily: 'inherit', fontSize: 10,
                 letterSpacing: '0.18em', cursor: 'pointer',
                 padding: '10px 20px 6px',
@@ -217,13 +222,13 @@ export default function Page() {
       <div style={{ maxWidth: MAX_W, margin: '0 auto', paddingTop: HDR + GAP, paddingBottom: 80 }}>
         <div style={{ margin: '0 36px' }}>
 
-          {/* Board panel */}
+          {/* Board: GUTTER_BG peeks between rows to create tile gaps */}
           <div style={{
             border: `1px solid ${BORDER}`,
             borderRadius: 6,
             overflow: 'clip',
-            background: BOARD_BG,
-            boxShadow: '0 4px 40px rgba(0,0,0,0.6)',
+            background: GUTTER_BG,
+            boxShadow: '0 4px 48px rgba(0,0,0,0.7)',
           }}>
 
             {/* Sticky column headers */}
@@ -232,7 +237,7 @@ export default function Page() {
               gridTemplateColumns: tab === 'live' ? LIVE_COLS : TOP_COLS,
               padding: '0 22px',
               background: '#202020',
-              borderBottom: `1px solid ${BORDER}`,
+              borderBottom: `2px solid ${GUTTER_BG}`,
               position: 'sticky', top: HDR, zIndex: 9,
             }}>
               {tab === 'live' ? (
@@ -254,15 +259,8 @@ export default function Page() {
             </div>
 
             {/* Live rows */}
-            {tab === 'live' && liveRows.map((d, i) => {
+            {tab === 'live' && liveRows.map((d) => {
               const isNew = newIds.has(d.id)
-              const warm  = !isNew && i < 10
-
-              const domainColor  = isNew ? '#fff8ec' : warm ? '#d4980c' : '#8a6a30'
-              const gateColor    = isNew ? GOLD      : warm ? '#a07018' : '#5a4018'
-              const timeColor    = isNew ? '#b09060' : warm ? '#686868' : '#484848'
-              const statusColor  = isNew ? AMBER     : warm ? '#8a6018' : '#4a3810'
-
               return (
                 <div
                   key={d.id}
@@ -271,7 +269,7 @@ export default function Page() {
                     display: 'grid',
                     gridTemplateColumns: LIVE_COLS,
                     padding: '0 22px',
-                    borderBottom: `1px solid ${DIVIDER}`,
+                    marginBottom: '2px',
                     height: 52,
                     alignItems: 'center',
                     background: ROW_BG,
@@ -281,7 +279,7 @@ export default function Page() {
                     className="domain-cell"
                     onClick={() => window.open(`https://${d.domain}`, '_blank')}
                     style={{
-                      color: domainColor,
+                      color: isNew ? NEW_DOMAIN : AMBER,
                       fontSize: 20,
                       cursor: 'pointer',
                       overflow: 'hidden',
@@ -293,13 +291,13 @@ export default function Page() {
                   >
                     {getSld(d.domain)}
                   </span>
-                  <span style={{ color: gateColor, fontSize: 14, letterSpacing: '0.06em' }}>
+                  <span style={{ color: isNew ? AMBER_BRIGHT : AMBER_GATE, fontSize: 14, letterSpacing: '0.06em' }}>
                     {getTld(d.domain)}
                   </span>
-                  <span style={{ color: timeColor, fontSize: 12, textAlign: 'right', letterSpacing: '0.04em' }}>
+                  <span style={{ color: TIME_COLOR, fontSize: 12, textAlign: 'right', letterSpacing: '0.04em' }}>
                     {formatArrived(d.shown_at)}
                   </span>
-                  <span style={{ color: statusColor, fontSize: 11, letterSpacing: '0.12em', textAlign: 'right' }}>
+                  <span style={{ color: isNew ? AMBER_BRIGHT : AMBER_STATUS, fontSize: 11, letterSpacing: '0.12em', textAlign: 'right' }}>
                     ARRIVED
                   </span>
                 </div>
@@ -326,18 +324,18 @@ export default function Page() {
                   display: 'grid',
                   gridTemplateColumns: TOP_COLS,
                   padding: '0 22px',
-                  borderBottom: `1px solid ${DIVIDER}`,
+                  marginBottom: '2px',
                   height: 52,
                   alignItems: 'center',
                   background: ROW_BG,
                 }}
               >
-                <span style={{ color: '#444', fontSize: 12, textAlign: 'right', letterSpacing: '0.04em' }}>{rank}</span>
+                <span style={{ color: '#555', fontSize: 12, textAlign: 'right', letterSpacing: '0.04em' }}>{rank}</span>
                 <span
                   className="domain-cell"
                   onClick={() => window.open(`https://${d.domain}`, '_blank')}
                   style={{
-                    color: '#d4980c',
+                    color: AMBER,
                     fontSize: 20,
                     cursor: 'pointer',
                     overflow: 'hidden',
@@ -350,9 +348,9 @@ export default function Page() {
                 >
                   {getSld(d.domain)}
                 </span>
-                <span style={{ color: '#a07018', fontSize: 14, letterSpacing: '0.06em' }}>{getTld(d.domain)}</span>
-                <span style={{ color: GOLD, fontSize: 14, textAlign: 'right', letterSpacing: '0.04em' }}>{d.score}</span>
-                <span style={{ color: '#8a6018', fontSize: 11, letterSpacing: '0.12em', textAlign: 'right' }}>ARRIVED</span>
+                <span style={{ color: AMBER_GATE, fontSize: 14, letterSpacing: '0.06em' }}>{getTld(d.domain)}</span>
+                <span style={{ color: AMBER_BRIGHT, fontSize: 14, textAlign: 'right', letterSpacing: '0.04em' }}>{d.score}</span>
+                <span style={{ color: AMBER_STATUS, fontSize: 11, letterSpacing: '0.12em', textAlign: 'right' }}>ARRIVED</span>
               </div>
             ))}
 
@@ -370,7 +368,7 @@ function ColHead({ children, align = 'left', style }: {
 }) {
   return (
     <div style={{
-      color: '#484848',
+      color: '#555',
       fontSize: 9,
       letterSpacing: '0.2em',
       padding: '10px 0',
@@ -384,7 +382,10 @@ function ColHead({ children, align = 'left', style }: {
 
 function EmptyState({ children }: { children: React.ReactNode }) {
   return (
-    <div style={{ color: '#3a3a3a', fontSize: 12, padding: '48px 22px', textAlign: 'center', letterSpacing: '0.16em' }}>
+    <div style={{
+      color: '#444', fontSize: 12, padding: '48px 22px',
+      textAlign: 'center', letterSpacing: '0.16em', background: ROW_BG,
+    }}>
       {children}
     </div>
   )
