@@ -2,8 +2,11 @@ name: Reveal Domains
 
 on:
   schedule:
-    - cron: '* * * * *'   # Every minute — loop inside reveals 1 domain/2s for 60s
+    - cron: '*/5 * * * *'   # Fallback every 5 min if chain breaks
   workflow_dispatch:
+
+permissions:
+  actions: write
 
 jobs:
   reveal:
@@ -27,3 +30,9 @@ jobs:
             python scripts/reveal_one.py
             sleep 1
           done
+
+      - name: Chain next run
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run reveal.yml --repo ${{ github.repository }}
