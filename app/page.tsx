@@ -11,7 +11,6 @@ export default function Page() {
   const lastIdRef = useRef<number>(0)
 
   useEffect(() => {
-    // Initial load: newest first
     supabase
       .from('domains')
       .select('id, domain')
@@ -20,11 +19,10 @@ export default function Page() {
       .then(({ data }) => {
         if (data?.length) {
           setDomains(data)
-          lastIdRef.current = data[0].id  // highest id is first in DESC result
+          lastIdRef.current = data[0].id
         }
       })
 
-    // Poll every 2s — server reveals 1 domain/2s so typically 0 or 1 new row
     const interval = setInterval(async () => {
       const { data } = await supabase
         .from('domains')
@@ -34,7 +32,6 @@ export default function Page() {
         .order('id', { ascending: true })
       if (data?.length) {
         lastIdRef.current = data[data.length - 1].id
-        // Newest at top: reverse ASC result then prepend
         setDomains(prev => [...[...data].reverse(), ...prev])
       }
     }, 1000)
@@ -54,6 +51,22 @@ export default function Page() {
 
   return (
     <main style={{ background: '#000000', minHeight: '100vh' }}>
+
+      {/* Logo top-left */}
+      <div style={{
+        position: 'fixed',
+        top: 20,
+        left: 24,
+        color: '#ffffff',
+        fontSize: 14,
+        fontWeight: 600,
+        letterSpacing: '-0.2px',
+        zIndex: 10,
+      }}>
+        domains.today
+      </div>
+
+      {/* Random button top-right */}
       <button
         onClick={openRandom}
         disabled={!domains.length}
@@ -64,17 +77,18 @@ export default function Page() {
           background: 'none',
           border: 'none',
           color: domains.length ? '#555555' : '#2a2a2a',
-          fontFamily: 'monospace',
+          fontFamily: 'inherit',
           fontSize: 13,
           cursor: domains.length ? 'pointer' : 'default',
           padding: 0,
-          letterSpacing: '0.02em',
+          zIndex: 10,
         }}
         onMouseEnter={e => { if (domains.length) e.currentTarget.style.color = '#ffffff' }}
         onMouseLeave={e => { e.currentTarget.style.color = domains.length ? '#555555' : '#2a2a2a' }}
       >
         random ↗
       </button>
+
       <div style={{ maxWidth: 680, margin: '0 auto', padding: '60px 24px 40px' }}>
         <div style={{ textAlign: 'center', marginBottom: 32 }}>
           <div style={{ fontSize: 72, fontWeight: 700, color: '#ffffff', lineHeight: 1, letterSpacing: '-2px' }}>
