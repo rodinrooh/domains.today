@@ -68,7 +68,7 @@ export default function Page() {
       </div>
 
       <div style={{ maxWidth: 600, margin: '0 auto', padding: '72px 24px 60px' }}>
-        <div style={{ textAlign: 'center', marginBottom: 48 }}>
+        <div style={{ textAlign: 'center', marginBottom: 48, marginTop: 40 }}>
 
           <div style={{ fontSize: 88, fontWeight: 800, color: '#ffffff', lineHeight: 1, letterSpacing: '-4px' }}>
             {filtered.length.toLocaleString()}
