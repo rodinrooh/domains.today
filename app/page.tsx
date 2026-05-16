@@ -79,6 +79,20 @@ export default function Page() {
         domains.today
       </div>
 
+      <div style={{
+        position: 'fixed',
+        top: 28,
+        right: 24,
+        color: '#333333',
+        fontSize: 11,
+        fontWeight: 400,
+        zIndex: 10,
+        lineHeight: '16px',
+        textAlign: 'right',
+      }}>
+        live since<br />May 15, 11:59 PM
+      </div>
+
       <div style={{ maxWidth: 600, margin: '0 auto', padding: '72px 24px 60px' }}>
         <div style={{ textAlign: 'center', marginBottom: 48, marginTop: 40 }}>
 
