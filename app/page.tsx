@@ -132,15 +132,15 @@ export default function Page() {
               key={d.id}
               onClick={() => window.open(`https://${d.domain}`, '_blank')}
               style={{
-                fontSize: 22,
+                fontSize: 16,
                 fontWeight: 500,
-                lineHeight: '40px',
-                color: '#b0b0b0',
+                lineHeight: '32px',
+                color: '#999999',
                 cursor: 'pointer',
                 textAlign: 'center',
               }}
               onMouseEnter={e => (e.currentTarget.style.color = '#ffffff')}
-              onMouseLeave={e => (e.currentTarget.style.color = '#b0b0b0')}
+              onMouseLeave={e => (e.currentTarget.style.color = '#999999')}
             >
               {d.domain}
             </div>
