@@ -29,29 +29,28 @@ function formatClock(d: Date) {
 }
 
 // ── Palette ────────────────────────────────────────────────────────────────
-// NEW row (during flip): white domain + bright gold accents
-// ALL other rows: uniform amber — no dimming
-const AMBER_BRIGHT = '#f5c030'   // new arrivals domain (white-gold)
-const AMBER        = '#e8980a'   // all rows — domain name
-const AMBER_GATE   = '#c87e08'   // gate (.com etc)
-const AMBER_STATUS = '#a06008'   // STATUS col
-const TIME_COLOR   = '#aaaaaa'   // time col — legible gray, same for all rows
-const NEW_DOMAIN   = '#fff8ec'   // newest domain during animation
+const AMBER      = '#f0b020'   // primary — ALL domain rows
+const AMBER_GATE = '#c88010'   // gate column
+const AMBER_NEW  = '#f5cc40'   // newest row during animation
+const WHITE_NEW  = '#fffaf0'   // newest domain text during animation
 
-const PAGE_BG   = '#1e1e1e'
-const HDR_BG    = 'rgba(22,22,22,0.96)'
-const GUTTER_BG = '#2a2a2a'      // board outer — peeks between rows as gutter
-const ROW_BG    = '#111111'      // individual row tile background
-const BORDER    = '#383838'
+const PAGE_BG    = '#111111'   // outer page
+const HDR_BG     = 'rgba(14,14,14,0.96)'
+const BOARD_GRAY = '#3c3c3c'   // board outer — the gray "frame" that peeks as gutter
+const ROW_BG     = '#141414'   // very dark row tiles
+const COL_HDR_BG = '#2a2a2a'   // column header strip
 
-const MAX_W      = 960
-const HDR        = 162
-const GAP        = 28
+const MAX_W      = 1000
+const HDR        = 168   // fixed header height px
+const GAP        = 32
+
+// Grid: TIME | DOMAIN | GATE | STATUS
+const LIVE_COLS = '148px minmax(0,1fr) 88px 96px'
+// Grid: # | DOMAIN | GATE | SCORE | STATUS
+const TOP_COLS  = '40px minmax(0,1fr) 88px 72px 96px'
+
 const MAX_DISPLAY = 200
 const MAX_STATE   = 500
-
-const LIVE_COLS = 'minmax(0,1fr) 84px 148px 96px'
-const TOP_COLS  = '40px minmax(0,1fr) 84px 72px 96px'
 
 export default function Page() {
   const [domains, setDomains]   = useState<DomainRow[]>([])
@@ -98,7 +97,7 @@ export default function Page() {
         const ids = new Set(incoming.map(d => d.id))
         setNewIds(ids)
         if (newIdsTimerRef.current) clearTimeout(newIdsTimerRef.current)
-        newIdsTimerRef.current = setTimeout(() => setNewIds(new Set()), 900)
+        newIdsTimerRef.current = setTimeout(() => setNewIds(new Set()), 1000)
         setDomains(prev => [...incoming, ...prev].slice(0, MAX_STATE))
         setTotal(prev => prev + data.length)
       }
@@ -155,30 +154,30 @@ export default function Page() {
       <div style={{
         position: 'fixed', top: 0, left: 0, right: 0, zIndex: 20,
         background: HDR_BG,
-        backdropFilter: 'blur(20px)',
-        WebkitBackdropFilter: 'blur(20px)',
-        borderBottom: `1px solid #2e2e2e`,
+        backdropFilter: 'blur(24px)',
+        WebkitBackdropFilter: 'blur(24px)',
+        borderBottom: `1px solid #282828`,
       }}>
-        <div style={{ maxWidth: MAX_W, margin: '0 auto', padding: '18px 36px 0' }}>
+        <div style={{ maxWidth: MAX_W, margin: '0 auto', padding: '20px 40px 0' }}>
 
           {/* Title row */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
             <div>
-              <div style={{ color: '#f0ede6', fontSize: 26, letterSpacing: '0.1em', lineHeight: 1, fontWeight: 700 }}>
+              <div style={{ color: '#f5f0e8', fontSize: 28, letterSpacing: '0.12em', lineHeight: 1, fontWeight: 700 }}>
                 INTERNET AIRPORT
               </div>
-              <div style={{ color: AMBER_BRIGHT, fontSize: 11, letterSpacing: '0.28em', marginTop: 7 }}>
+              <div style={{ color: AMBER, fontSize: 11, letterSpacing: '0.3em', marginTop: 8 }}>
                 INTERNATIONAL ARRIVALS
               </div>
-              <div style={{ color: '#555', fontSize: 10, letterSpacing: '0.16em', marginTop: 5 }}>
+              <div style={{ color: '#4a4a4a', fontSize: 10, letterSpacing: '0.18em', marginTop: 6 }}>
                 {searching ? 'SEARCHING...' : `${displayCount.toLocaleString()}${search ? ' MATCHING' : ' ARRIVALS'}`}
               </div>
             </div>
             <div style={{ textAlign: 'right' }}>
-              <div style={{ color: AMBER_BRIGHT, fontSize: 22, letterSpacing: '0.04em', fontWeight: 700 }}>
-                {now ? formatClock(now) : ' '}
+              <div style={{ color: AMBER_NEW, fontSize: 24, letterSpacing: '0.06em', fontWeight: 700 }}>
+                {now ? formatClock(now) : ' '}
               </div>
-              <div style={{ color: '#444', fontSize: 9, letterSpacing: '0.28em', marginTop: 5 }}>
+              <div style={{ color: '#3a3a3a', fontSize: 9, letterSpacing: '0.3em', marginTop: 6 }}>
                 PST
               </div>
             </div>
@@ -190,10 +189,10 @@ export default function Page() {
             onChange={e => setSearch(e.target.value)}
             placeholder="SEARCH ARRIVALS..."
             style={{
-              display: 'block', marginTop: 16, width: '100%',
+              display: 'block', marginTop: 18, width: '100%',
               background: 'transparent', border: 'none',
-              borderBottom: `1px solid #2e2e2e`,
-              outline: 'none', color: '#888',
+              borderBottom: `1px solid #282828`,
+              outline: 'none', color: '#777',
               fontSize: 11, letterSpacing: '0.12em',
               padding: '6px 0 8px', fontFamily: 'inherit',
             }}
@@ -204,11 +203,11 @@ export default function Page() {
             {(['live', 'top'] as const).map(t => (
               <button key={t} onClick={() => setTab(t)} style={{
                 background: 'transparent', border: 'none',
-                borderBottom: tab === t ? `2px solid ${AMBER_BRIGHT}` : '2px solid transparent',
-                color: tab === t ? '#f0ede6' : '#444',
+                borderBottom: tab === t ? `2px solid ${AMBER}` : '2px solid transparent',
+                color: tab === t ? '#f5f0e8' : '#3a3a3a',
                 fontFamily: 'inherit', fontSize: 10,
-                letterSpacing: '0.18em', cursor: 'pointer',
-                padding: '10px 20px 6px',
+                letterSpacing: '0.2em', cursor: 'pointer',
+                padding: '10px 22px 7px',
               }}>
                 {t === 'live' ? 'LIVE ARRIVALS' : 'TOP ARRIVALS'}
               </button>
@@ -220,37 +219,41 @@ export default function Page() {
 
       {/* ── Content ── */}
       <div style={{ maxWidth: MAX_W, margin: '0 auto', paddingTop: HDR + GAP, paddingBottom: 80 }}>
-        <div style={{ margin: '0 36px' }}>
+        <div style={{ margin: '0 40px' }}>
 
-          {/* Board: GUTTER_BG peeks between rows to create tile gaps */}
+          {/* ── Board outer shell — gray frame ── */}
           <div style={{
-            border: `1px solid ${BORDER}`,
-            borderRadius: 6,
+            background: BOARD_GRAY,
+            borderRadius: 8,
             overflow: 'clip',
-            background: GUTTER_BG,
-            boxShadow: '0 4px 48px rgba(0,0,0,0.7)',
+            border: `2px solid #484848`,
+            boxShadow: '0 8px 64px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.06)',
+            padding: '6px 6px 4px',
           }}>
 
-            {/* Sticky column headers */}
+            {/* Column header strip — sits on gray board bg */}
             <div style={{
               display: 'grid',
               gridTemplateColumns: tab === 'live' ? LIVE_COLS : TOP_COLS,
-              padding: '0 22px',
-              background: '#202020',
-              borderBottom: `2px solid ${GUTTER_BG}`,
-              position: 'sticky', top: HDR, zIndex: 9,
+              padding: '0 20px',
+              marginBottom: '6px',
+              background: COL_HDR_BG,
+              borderRadius: 4,
+              position: 'sticky',
+              top: HDR,
+              zIndex: 9,
             }}>
               {tab === 'live' ? (
                 <>
-                  <ColHead>DOMAIN</ColHead>
+                  <ColHead>ARRIVED (PST)</ColHead>
+                  <ColHead style={{ paddingLeft: 24 }}>DOMAIN</ColHead>
                   <ColHead>GATE</ColHead>
-                  <ColHead align="right">ARRIVED (PST)</ColHead>
                   <ColHead align="right">STATUS</ColHead>
                 </>
               ) : (
                 <>
-                  <ColHead align="right">#</ColHead>
-                  <ColHead style={{ paddingLeft: 14 }}>DOMAIN</ColHead>
+                  <ColHead align="center">#</ColHead>
+                  <ColHead style={{ paddingLeft: 16 }}>DOMAIN</ColHead>
                   <ColHead>GATE</ColHead>
                   <ColHead align="right">SCORE</ColHead>
                   <ColHead align="right">STATUS</ColHead>
@@ -258,7 +261,7 @@ export default function Page() {
               )}
             </div>
 
-            {/* Live rows */}
+            {/* ── Live rows ── */}
             {tab === 'live' && liveRows.map((d) => {
               const isNew = newIds.has(d.id)
               return (
@@ -268,54 +271,70 @@ export default function Page() {
                   style={{
                     display: 'grid',
                     gridTemplateColumns: LIVE_COLS,
-                    padding: '0 22px',
-                    marginBottom: '2px',
-                    height: 52,
+                    padding: '0 20px',
+                    marginBottom: '5px',
+                    height: 68,
                     alignItems: 'center',
                     background: ROW_BG,
+                    borderRadius: 4,
+                    border: `1px solid #222`,
                   }}
                 >
+                  {/* Time column — boxed style */}
+                  <div>
+                    <span className="time-cell" style={isNew ? { borderColor: '#5a4a20', color: '#f0f0f0' } : {}}>
+                      {formatArrived(d.shown_at)}
+                    </span>
+                  </div>
+
+                  {/* Domain — big, amber, wide letter-spacing */}
                   <span
                     className="domain-cell"
                     onClick={() => window.open(`https://${d.domain}`, '_blank')}
                     style={{
-                      color: isNew ? NEW_DOMAIN : AMBER,
-                      fontSize: 20,
+                      color: isNew ? WHITE_NEW : AMBER,
+                      fontSize: 26,
                       cursor: 'pointer',
                       overflow: 'hidden',
                       textOverflow: 'ellipsis',
                       whiteSpace: 'nowrap',
-                      paddingRight: 16,
-                      letterSpacing: '0.04em',
+                      paddingLeft: 24,
+                      paddingRight: 20,
+                      letterSpacing: '0.08em',
                     }}
                   >
                     {getSld(d.domain)}
                   </span>
-                  <span style={{ color: isNew ? AMBER_BRIGHT : AMBER_GATE, fontSize: 14, letterSpacing: '0.06em' }}>
+
+                  {/* Gate — TLD */}
+                  <span style={{
+                    color: isNew ? AMBER_NEW : AMBER_GATE,
+                    fontSize: 15,
+                    letterSpacing: '0.06em',
+                    fontWeight: 400,
+                  }}>
                     {getTld(d.domain)}
                   </span>
-                  <span style={{ color: TIME_COLOR, fontSize: 12, textAlign: 'right', letterSpacing: '0.04em' }}>
-                    {formatArrived(d.shown_at)}
-                  </span>
-                  <span style={{ color: isNew ? AMBER_BRIGHT : AMBER_STATUS, fontSize: 11, letterSpacing: '0.12em', textAlign: 'right' }}>
+
+                  {/* Status */}
+                  <span style={{
+                    color: isNew ? AMBER_NEW : '#7a5a10',
+                    fontSize: 11,
+                    letterSpacing: '0.14em',
+                    textAlign: 'right',
+                  }}>
                     ARRIVED
                   </span>
                 </div>
               )
             })}
 
-            {tab === 'live' && !searching && liveRows.length === 0 && (
-              <EmptyState>{search ? 'NO MATCHES' : 'LOADING...'}</EmptyState>
-            )}
-            {tab === 'live' && searching && (
-              <EmptyState>SEARCHING...</EmptyState>
-            )}
+            {tab === 'live' && !searching && liveRows.length === 0 && <BoardEmpty>{search ? 'NO MATCHES' : 'LOADING...'}</BoardEmpty>}
+            {tab === 'live' && searching && <BoardEmpty>SEARCHING...</BoardEmpty>}
 
-            {/* Top rows */}
-            {tab === 'top' && leaderLoading && <EmptyState>LOADING...</EmptyState>}
-            {tab === 'top' && !leaderLoading && filteredLeader.length === 0 && (
-              <EmptyState>{search ? 'NO MATCHES' : 'NO DATA'}</EmptyState>
-            )}
+            {/* ── Top rows ── */}
+            {tab === 'top' && leaderLoading && <BoardEmpty>LOADING...</BoardEmpty>}
+            {tab === 'top' && !leaderLoading && filteredLeader.length === 0 && <BoardEmpty>{search ? 'NO MATCHES' : 'NO DATA'}</BoardEmpty>}
             {tab === 'top' && filteredLeader.map(({ d, rank }) => (
               <div
                 key={d.id}
@@ -323,37 +342,41 @@ export default function Page() {
                 style={{
                   display: 'grid',
                   gridTemplateColumns: TOP_COLS,
-                  padding: '0 22px',
-                  marginBottom: '2px',
-                  height: 52,
+                  padding: '0 20px',
+                  marginBottom: '5px',
+                  height: 68,
                   alignItems: 'center',
                   background: ROW_BG,
+                  borderRadius: 4,
+                  border: `1px solid #222`,
                 }}
               >
-                <span style={{ color: '#555', fontSize: 12, textAlign: 'right', letterSpacing: '0.04em' }}>{rank}</span>
+                <span style={{ color: '#555', fontSize: 13, textAlign: 'center', letterSpacing: '0.04em' }}>{rank}</span>
                 <span
                   className="domain-cell"
                   onClick={() => window.open(`https://${d.domain}`, '_blank')}
                   style={{
                     color: AMBER,
-                    fontSize: 20,
+                    fontSize: 26,
                     cursor: 'pointer',
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
                     whiteSpace: 'nowrap',
-                    paddingLeft: 14,
-                    paddingRight: 16,
-                    letterSpacing: '0.04em',
+                    paddingLeft: 16,
+                    paddingRight: 20,
+                    letterSpacing: '0.08em',
                   }}
                 >
                   {getSld(d.domain)}
                 </span>
-                <span style={{ color: AMBER_GATE, fontSize: 14, letterSpacing: '0.06em' }}>{getTld(d.domain)}</span>
-                <span style={{ color: AMBER_BRIGHT, fontSize: 14, textAlign: 'right', letterSpacing: '0.04em' }}>{d.score}</span>
-                <span style={{ color: AMBER_STATUS, fontSize: 11, letterSpacing: '0.12em', textAlign: 'right' }}>ARRIVED</span>
+                <span style={{ color: AMBER_GATE, fontSize: 15, letterSpacing: '0.06em' }}>{getTld(d.domain)}</span>
+                <span style={{ color: AMBER_NEW, fontSize: 15, textAlign: 'right', letterSpacing: '0.04em' }}>{d.score}</span>
+                <span style={{ color: '#7a5a10', fontSize: 11, letterSpacing: '0.14em', textAlign: 'right' }}>ARRIVED</span>
               </div>
             ))}
 
+            {/* Bottom padding within gray frame */}
+            <div style={{ height: 4 }} />
           </div>
         </div>
       </div>
@@ -363,15 +386,15 @@ export default function Page() {
 
 function ColHead({ children, align = 'left', style }: {
   children: React.ReactNode
-  align?: 'left' | 'right'
+  align?: 'left' | 'right' | 'center'
   style?: React.CSSProperties
 }) {
   return (
     <div style={{
-      color: '#555',
+      color: '#666',
       fontSize: 9,
-      letterSpacing: '0.2em',
-      padding: '10px 0',
+      letterSpacing: '0.22em',
+      padding: '11px 0',
       textAlign: align,
       ...style,
     }}>
@@ -380,11 +403,12 @@ function ColHead({ children, align = 'left', style }: {
   )
 }
 
-function EmptyState({ children }: { children: React.ReactNode }) {
+function BoardEmpty({ children }: { children: React.ReactNode }) {
   return (
     <div style={{
-      color: '#444', fontSize: 12, padding: '48px 22px',
-      textAlign: 'center', letterSpacing: '0.16em', background: ROW_BG,
+      color: '#444', fontSize: 12, padding: '52px',
+      textAlign: 'center', letterSpacing: '0.18em',
+      background: ROW_BG, borderRadius: 4, marginBottom: 5,
     }}>
       {children}
     </div>
