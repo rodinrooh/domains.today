@@ -18,12 +18,12 @@ jobs:
       - name: Install dependencies
         run: pip install -r scripts/requirements.txt
 
-      - name: Reveal 1 domain every 2 seconds for 60 seconds
+      - name: Reveal 1 domain every ~2 seconds for 60 seconds
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
         run: |
-          for i in $(seq 1 30); do
+          for i in $(seq 1 45); do
             python scripts/reveal_one.py
-            sleep 2
+            sleep 1
           done
