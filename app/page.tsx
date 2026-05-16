@@ -52,7 +52,6 @@ export default function Page() {
   return (
     <main style={{ background: '#000000', minHeight: '100vh' }}>
 
-      {/* Logo top-left */}
       <div style={{
         position: 'fixed',
         top: 20,
@@ -66,37 +65,21 @@ export default function Page() {
         domains.today
       </div>
 
-      {/* Random button top-right */}
-      <button
-        onClick={openRandom}
-        disabled={!domains.length}
-        style={{
-          position: 'fixed',
-          top: 20,
-          right: 24,
-          background: 'none',
-          border: 'none',
-          color: domains.length ? '#555555' : '#2a2a2a',
-          fontFamily: 'inherit',
-          fontSize: 13,
-          cursor: domains.length ? 'pointer' : 'default',
-          padding: 0,
-          zIndex: 10,
-        }}
-        onMouseEnter={e => { if (domains.length) e.currentTarget.style.color = '#ffffff' }}
-        onMouseLeave={e => { e.currentTarget.style.color = domains.length ? '#555555' : '#2a2a2a' }}
-      >
-        random ↗
-      </button>
-
       <div style={{ maxWidth: 680, margin: '0 auto', padding: '60px 24px 40px' }}>
         <div style={{ textAlign: 'center', marginBottom: 32 }}>
+
           <div style={{ fontSize: 72, fontWeight: 700, color: '#ffffff', lineHeight: 1, letterSpacing: '-2px' }}>
-            {domains.length.toLocaleString()}
+            {filtered.length.toLocaleString()}
           </div>
+
           <div style={{ color: '#555555', fontSize: 13, marginTop: 10 }}>
-            domains registered today
+            {search ? 'domains matching your search' : 'domains registered today'}
           </div>
+
+          <div style={{ color: '#383838', fontSize: 12, marginTop: 16, lineHeight: '18px', maxWidth: 340, margin: '16px auto 0' }}>
+            Every domain name registered on the internet today, surfaced in real time. A new domain appears every 2 seconds.
+          </div>
+
           <input
             value={search}
             onChange={e => setSearch(e.target.value)}
@@ -117,7 +100,29 @@ export default function Page() {
               textAlign: 'center',
             }}
           />
+
+          <button
+            onClick={openRandom}
+            disabled={!domains.length}
+            style={{
+              marginTop: 12,
+              background: 'none',
+              border: '1px solid #2a2a2a',
+              color: domains.length ? '#555555' : '#2a2a2a',
+              fontFamily: 'inherit',
+              fontSize: 13,
+              cursor: domains.length ? 'pointer' : 'default',
+              padding: '7px 20px',
+              display: 'inline-block',
+            }}
+            onMouseEnter={e => { if (domains.length) { e.currentTarget.style.color = '#ffffff'; e.currentTarget.style.borderColor = '#555555' } }}
+            onMouseLeave={e => { e.currentTarget.style.color = domains.length ? '#555555' : '#2a2a2a'; e.currentTarget.style.borderColor = '#2a2a2a' }}
+          >
+            random ↗
+          </button>
+
         </div>
+
         <div>
           {filtered.map(d => (
             <div
