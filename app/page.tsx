@@ -91,7 +91,7 @@ export default function Page() {
           </div>
 
           <div style={{ color: '#333333', fontSize: 12, fontWeight: 400, marginTop: 20, lineHeight: '20px', maxWidth: 300, margin: '20px auto 0' }}>
-            Every domain registered on the internet, surfaced live. A new one appears every ~2 seconds.
+            Every domain registered on the internet, surfaced live. A new one appears every ~2 seconds. Most won't load — they were just bought and have no site yet.
           </div>
 
           <input
