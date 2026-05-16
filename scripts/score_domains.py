@@ -66,15 +66,16 @@ def score_domain(domain: str) -> int:
 supabase = create_client(os.environ["SUPABASE_URL"], os.environ["SUPABASE_SERVICE_KEY"])
 
 PAGE = 1000
-offset = 0
 total = 0
 
 while True:
+    # Always fetch from offset 0 — scored rows drop off the IS NULL filter,
+    # so incrementing offset would skip rows each iteration.
     res = (
         supabase.table("domains")
         .select("id, domain, date_added, shown")
         .is_("score", "null")
-        .range(offset, offset + PAGE - 1)
+        .limit(PAGE)
         .execute()
     )
     rows = res.data
@@ -96,8 +97,5 @@ while True:
 
     total += len(rows)
     print(f"Scored {total} domains so far...")
-    if len(rows) < PAGE:
-        break
-    offset += PAGE
 
 print(f"Done. Total scored: {total}")

@@ -6,6 +6,9 @@ import { supabase } from '@/lib/supabase'
 type DomainRow = { id: number; domain: string }
 type LeaderRow = { id: number; domain: string; score: number; date_added: string }
 
+const FEED_BLURB = 'Every domain registered on the internet, surfaced live. Most are freshly purchased with nothing hosted yet. A new one appears every ~2 seconds.'
+const LEADER_BLURB = 'The highest-scoring domains from the latest batch, ranked by name quality. Short names, real words, and clean TLDs score highest. Updated once daily.'
+
 export default function Page() {
   const [domains, setDomains] = useState<DomainRow[]>([])
   const [totalCount, setTotalCount] = useState<number>(0)
@@ -88,113 +91,45 @@ export default function Page() {
     ? domains.filter(d => d.domain.includes(search.toLowerCase()))
     : domains
 
+  const filteredLeaderWithIndex = leaderboard
+    .map((d, i) => ({ d, rank: i + 1 }))
+    .filter(({ d }) => !search || d.domain.includes(search.toLowerCase()))
+
+  const currentPool = tab === 'leaderboard'
+    ? filteredLeaderWithIndex.map(({ d }) => d)
+    : filtered
+
   function openRandom() {
-    if (!domains.length) return
-    const pick = domains[Math.floor(Math.random() * domains.length)]
+    if (!currentPool.length) return
+    const pick = currentPool[Math.floor(Math.random() * currentPool.length)]
     window.open(`https://${pick.domain}`, '_blank')
   }
 
-  const displayCount = search ? filtered.length : totalCount
+  const displayCount = search ? currentPool.length : totalCount
 
   return (
     <main style={{ background: '#000000', minHeight: '100vh' }}>
 
       <div style={{
         position: 'fixed',
-        top: 32,
+        top: 0,
         left: 0,
         right: 0,
-        textAlign: 'center',
-        color: '#ffffff',
-        fontSize: 22,
-        fontWeight: 700,
-        letterSpacing: '-0.5px',
         zIndex: 10,
+        background: '#000000',
+        paddingTop: 24,
+        paddingBottom: 12,
       }}>
-        domains.today
-      </div>
-
-      <div style={{
-        position: 'fixed',
-        top: 18,
-        right: 24,
-        color: '#555555',
-        fontSize: 11,
-        fontWeight: 400,
-        zIndex: 10,
-        lineHeight: '16px',
-        textAlign: 'right',
-      }}>
-        live since<br />May 15, 11:59 PM
-      </div>
-
-      <div style={{ maxWidth: 600, margin: '0 auto', padding: '72px 24px 60px' }}>
-        <div style={{ textAlign: 'center', marginBottom: 48, marginTop: 40 }}>
-
-          <div style={{ fontSize: 88, fontWeight: 800, color: '#ffffff', lineHeight: 1, letterSpacing: '-4px' }}>
-            {displayCount.toLocaleString()}
-          </div>
-
-          <div style={{ color: '#444444', fontSize: 13, fontWeight: 500, marginTop: 12, letterSpacing: '0.01em' }}>
-            {search ? 'domains matching your search' : 'domains registered'}
-          </div>
-
-          <div style={{ color: '#333333', fontSize: 12, fontWeight: 400, marginTop: 20, lineHeight: '20px', maxWidth: 300, margin: '20px auto 0' }}>
-            Every domain registered on the internet, surfaced live. Most are freshly purchased with nothing hosted yet. A new one appears every ~2 seconds.
-          </div>
-
-          {tab === 'feed' && (
-            <>
-              <input
-                value={search}
-                onChange={e => setSearch(e.target.value)}
-                placeholder="search domains..."
-                style={{
-                  marginTop: 24,
-                  background: 'transparent',
-                  border: '1px solid #2a2a2a',
-                  outline: 'none',
-                  color: '#ffffff',
-                  padding: '10px 16px',
-                  width: '100%',
-                  maxWidth: 300,
-                  fontFamily: 'inherit',
-                  fontSize: 13,
-                  fontWeight: 400,
-                  display: 'block',
-                  margin: '24px auto 0',
-                  textAlign: 'center',
-                }}
-              />
-
-              <button
-                onClick={openRandom}
-                disabled={!domains.length}
-                style={{
-                  marginTop: 10,
-                  background: 'transparent',
-                  border: '1px solid #2a2a2a',
-                  color: domains.length ? '#666666' : '#2a2a2a',
-                  fontFamily: 'inherit',
-                  fontSize: 13,
-                  fontWeight: 400,
-                  cursor: domains.length ? 'pointer' : 'default',
-                  padding: '7px 24px',
-                  display: 'inline-block',
-                  width: 'auto',
-                  maxWidth: 160,
-                }}
-                onMouseEnter={e => { if (domains.length) { e.currentTarget.style.color = '#ffffff'; e.currentTarget.style.borderColor = '#555555' } }}
-                onMouseLeave={e => { e.currentTarget.style.color = domains.length ? '#666666' : '#2a2a2a'; e.currentTarget.style.borderColor = '#2a2a2a' }}
-              >
-                random
-              </button>
-            </>
-          )}
-
+        <div style={{
+          textAlign: 'center',
+          color: '#ffffff',
+          fontSize: 22,
+          fontWeight: 700,
+          letterSpacing: '-0.5px',
+        }}>
+          domains.today
         </div>
-
-        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 32 }}>
+        <div style={{ display: 'flex', justifyContent: 'center', marginTop: 12 }}>
           {(['feed', 'leaderboard'] as const).map((t, i) => (
             <button
               key={t}
@@ -214,6 +149,82 @@ export default function Page() {
               {t}
             </button>
           ))}
+        </div>
+      </div>
+
+      <div style={{
+        position: 'fixed',
+        top: 18,
+        right: 24,
+        color: '#555555',
+        fontSize: 11,
+        fontWeight: 400,
+        zIndex: 11,
+        lineHeight: '16px',
+        textAlign: 'right',
+      }}>
+        live since<br />May 15, 11:59 PM
+      </div>
+
+      <div style={{ maxWidth: 600, margin: '0 auto', padding: '108px 24px 60px' }}>
+        <div style={{ textAlign: 'center', marginBottom: 48, marginTop: 20 }}>
+
+          <div style={{ fontSize: 88, fontWeight: 800, color: '#ffffff', lineHeight: 1, letterSpacing: '-4px' }}>
+            {displayCount.toLocaleString()}
+          </div>
+
+          <div style={{ color: '#444444', fontSize: 13, fontWeight: 500, marginTop: 12, letterSpacing: '0.01em' }}>
+            {search ? 'domains matching your search' : 'domains registered'}
+          </div>
+
+          <div style={{ color: '#555555', fontSize: 12, fontWeight: 400, lineHeight: '20px', maxWidth: 300, margin: '20px auto 0' }}>
+            {tab === 'feed' ? FEED_BLURB : LEADER_BLURB}
+          </div>
+
+          <input
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="search domains..."
+            style={{
+              background: 'transparent',
+              border: '1px solid #2a2a2a',
+              outline: 'none',
+              color: '#ffffff',
+              padding: '10px 16px',
+              width: '100%',
+              maxWidth: 300,
+              fontFamily: 'inherit',
+              fontSize: 13,
+              fontWeight: 400,
+              display: 'block',
+              margin: '24px auto 0',
+              textAlign: 'center',
+            }}
+          />
+
+          <button
+            onClick={openRandom}
+            disabled={!currentPool.length}
+            style={{
+              marginTop: 10,
+              background: 'transparent',
+              border: '1px solid #2a2a2a',
+              color: currentPool.length ? '#666666' : '#2a2a2a',
+              fontFamily: 'inherit',
+              fontSize: 13,
+              fontWeight: 400,
+              cursor: currentPool.length ? 'pointer' : 'default',
+              padding: '7px 24px',
+              display: 'inline-block',
+              width: 'auto',
+              maxWidth: 160,
+            }}
+            onMouseEnter={e => { if (currentPool.length) { e.currentTarget.style.color = '#ffffff'; e.currentTarget.style.borderColor = '#555555' } }}
+            onMouseLeave={e => { e.currentTarget.style.color = currentPool.length ? '#666666' : '#2a2a2a'; e.currentTarget.style.borderColor = '#2a2a2a' }}
+          >
+            random
+          </button>
+
         </div>
 
         {tab === 'feed' && (
@@ -244,10 +255,10 @@ export default function Page() {
             {leaderLoading && (
               <div style={{ textAlign: 'center', color: '#333333', fontSize: 13 }}>loading...</div>
             )}
-            {!leaderLoading && leaderboard.length === 0 && (
+            {!leaderLoading && filteredLeaderWithIndex.length === 0 && (
               <div style={{ textAlign: 'center', color: '#333333', fontSize: 13 }}>no scored domains yet</div>
             )}
-            {leaderboard.map((d, i) => (
+            {filteredLeaderWithIndex.map(({ d, rank }) => (
               <div
                 key={d.id}
                 style={{
@@ -259,7 +270,7 @@ export default function Page() {
                 }}
               >
                 <span style={{ color: '#333333', fontSize: 12, width: 24, textAlign: 'right', flexShrink: 0 }}>
-                  {i + 1}
+                  {rank}
                 </span>
                 <span
                   onClick={() => window.open(`https://${d.domain}`, '_blank')}
