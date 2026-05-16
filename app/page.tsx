@@ -55,7 +55,9 @@ export default function Page() {
       <div style={{
         position: 'fixed',
         top: 32,
-        left: 40,
+        left: 0,
+        right: 0,
+        textAlign: 'center',
         color: '#ffffff',
         fontSize: 22,
         fontWeight: 700,
