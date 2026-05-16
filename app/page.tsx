@@ -89,11 +89,10 @@ export default function Page() {
             style={{
               marginTop: 24,
               background: 'transparent',
-              border: 'none',
-              borderBottom: '1px solid #2a2a2a',
+              border: '1px solid #2a2a2a',
               outline: 'none',
               color: '#ffffff',
-              padding: '8px 0',
+              padding: '10px 16px',
               width: '100%',
               maxWidth: 300,
               fontFamily: 'inherit',
@@ -109,21 +108,23 @@ export default function Page() {
             onClick={openRandom}
             disabled={!domains.length}
             style={{
-              marginTop: 16,
-              background: 'none',
-              border: 'none',
-              color: domains.length ? '#444444' : '#222222',
+              marginTop: 10,
+              background: 'transparent',
+              border: '1px solid #2a2a2a',
+              color: domains.length ? '#666666' : '#2a2a2a',
               fontFamily: 'inherit',
-              fontSize: 12,
-              fontWeight: 500,
+              fontSize: 13,
+              fontWeight: 400,
               cursor: domains.length ? 'pointer' : 'default',
-              padding: 0,
-              letterSpacing: '0.03em',
+              padding: '10px 24px',
+              display: 'inline-block',
+              width: '100%',
+              maxWidth: 300,
             }}
-            onMouseEnter={e => { if (domains.length) e.currentTarget.style.color = '#ffffff' }}
-            onMouseLeave={e => { e.currentTarget.style.color = domains.length ? '#444444' : '#222222' }}
+            onMouseEnter={e => { if (domains.length) { e.currentTarget.style.color = '#ffffff'; e.currentTarget.style.borderColor = '#555555' } }}
+            onMouseLeave={e => { e.currentTarget.style.color = domains.length ? '#666666' : '#2a2a2a'; e.currentTarget.style.borderColor = '#2a2a2a' }}
           >
-            random ↗
+            random
           </button>
 
         </div>
