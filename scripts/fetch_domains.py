@@ -33,6 +33,11 @@ with zipfile.ZipFile(io.BytesIO(response.content)) as zf:
 
 print(f"Found {len(domains)} domains")
 
+# Clear any unrevealed backlog before uploading the new batch
+result = supabase.table("domains").update({"shown": True}).eq("shown", False).execute()
+cleared = len(result.data) if result.data else 0
+print(f"Cleared {cleared} backlogged domains (marked shown=true)")
+
 today = date.today().isoformat()
 BATCH = 500
 for i in range(0, len(domains), BATCH):
