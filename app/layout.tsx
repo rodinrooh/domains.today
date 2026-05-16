@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
-import { Space_Mono } from "next/font/google";
+import { IBM_Plex_Mono } from "next/font/google";
 import "./globals.css";
 
-const spaceMono = Space_Mono({ subsets: ["latin"], weight: ["400", "700"] });
+const ibmPlexMono = IBM_Plex_Mono({ subsets: ["latin"], weight: ["400", "700"] });
 
 export const metadata: Metadata = {
   title: "Internet Airport",
@@ -16,7 +16,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={spaceMono.className}>{children}</body>
+      <body className={ibmPlexMono.className}>{children}</body>
     </html>
   );
 }

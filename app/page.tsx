@@ -19,21 +19,28 @@ function getSld(d: string) {
 function formatArrived(ts: string | null) {
   if (!ts) return '---'
   return new Date(ts).toLocaleTimeString('en-US', {
-    hour12: false,
-    hour: '2-digit',
+    hour12: true,
+    hour: 'numeric',
     minute: '2-digit',
     second: '2-digit',
+    timeZone: 'America/Los_Angeles',
   })
 }
 
 function formatClock(d: Date) {
   return d.toLocaleTimeString('en-US', {
-    hour12: false,
-    hour: '2-digit',
+    hour12: true,
+    hour: 'numeric',
     minute: '2-digit',
     second: '2-digit',
+    timeZone: 'America/Los_Angeles',
   })
 }
+
+const AMBER = '#f5a623'
+const MAX_W = 860
+const LIVE_COLS = 'minmax(0, 1fr) 72px 118px 88px'
+const TOP_COLS = '40px minmax(0, 1fr) 72px 68px 88px'
 
 export default function Page() {
   const [domains, setDomains] = useState<DomainRow[]>([])
@@ -49,14 +56,12 @@ export default function Page() {
   const [leaderLoading, setLeaderLoading] = useState(false)
   const leaderLoadedRef = useRef(false)
 
-  // Clock
   useEffect(() => {
     setNow(new Date())
     const t = setInterval(() => setNow(new Date()), 1000)
     return () => clearInterval(t)
   }, [])
 
-  // Feed + polling
   useEffect(() => {
     supabase
       .from('domains')
@@ -101,7 +106,6 @@ export default function Page() {
     }
   }, [])
 
-  // Leaderboard
   useEffect(() => {
     if (tab !== 'top' || leaderLoadedRef.current) return
     leaderLoadedRef.current = true
@@ -122,137 +126,145 @@ export default function Page() {
   const filtered = search
     ? domains.filter(d => d.domain.includes(search.toLowerCase()))
     : domains
-  const visible = filtered.slice(0, 50)
 
   const filteredLeaderWithRank = leaderboard
     .map((d, i) => ({ d, rank: i + 1 }))
     .filter(({ d }) => !search || d.domain.includes(search.toLowerCase()))
 
-  const AMBER = '#f5a623'
-  const LIVE_COLS = 'minmax(0, 1fr) 80px 100px 100px'
-  const TOP_COLS = '44px minmax(0, 1fr) 80px 80px 100px'
-  const gridCols = tab === 'live' ? LIVE_COLS : TOP_COLS
+  const displayCount = search
+    ? (tab === 'live' ? filtered.length : filteredLeaderWithRank.length)
+    : totalCount
 
-  const headerHeight = 152
+  const gridCols = tab === 'live' ? LIVE_COLS : TOP_COLS
 
   return (
     <main style={{ background: '#111111', minHeight: '100vh' }}>
 
-      {/* Fixed header */}
+      {/* Fixed blurred header */}
       <div style={{
         position: 'fixed',
         top: 0,
         left: 0,
         right: 0,
         zIndex: 10,
-        background: '#111111',
-        borderBottom: '1px solid #1e1e1e',
-        padding: '16px 24px 0',
+        background: 'rgba(17, 17, 17, 0.82)',
+        backdropFilter: 'blur(14px)',
+        WebkitBackdropFilter: 'blur(14px)',
+        borderBottom: '1px solid #222',
       }}>
-        {/* Title row */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-          <div>
-            <div style={{ color: '#ffffff', fontSize: 20, fontWeight: 700, letterSpacing: '0.05em' }}>
-              INTERNET AIRPORT
+        <div style={{ maxWidth: MAX_W, margin: '0 auto', padding: '16px 24px 0' }}>
+
+          {/* Title + clock */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <div>
+              <div style={{ color: '#ffffff', fontSize: 18, fontWeight: 700, letterSpacing: '0.1em' }}>
+                INTERNET AIRPORT
+              </div>
+              <div style={{ color: AMBER, fontSize: 10, letterSpacing: '0.2em', marginTop: 4 }}>
+                INTERNATIONAL ARRIVALS
+              </div>
+              <div style={{ color: '#666', fontSize: 10, letterSpacing: '0.12em', marginTop: 3 }}>
+                {displayCount.toLocaleString()}{search ? ' MATCHING' : ' ARRIVALS'}
+              </div>
             </div>
-            <div style={{ color: AMBER, fontSize: 11, letterSpacing: '0.12em', marginTop: 3 }}>
-              INTERNATIONAL ARRIVALS
-            </div>
-            <div style={{ color: '#888888', fontSize: 11, letterSpacing: '0.08em', marginTop: 2 }}>
-              {totalCount.toLocaleString()} ARRIVALS
+            <div style={{ textAlign: 'right', paddingTop: 2 }}>
+              <div style={{ color: AMBER, fontSize: 14, letterSpacing: '0.06em', fontWeight: 700 }}>
+                {now ? formatClock(now) : ''}
+              </div>
+              <div style={{ color: '#444', fontSize: 9, letterSpacing: '0.18em', marginTop: 3 }}>
+                PST
+              </div>
             </div>
           </div>
-          <div style={{ color: AMBER, fontSize: 13, letterSpacing: '0.05em', paddingTop: 2, minWidth: 80, textAlign: 'right' }}>
-            {now ? formatClock(now) : ''}
+
+          {/* Search */}
+          <input
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="SEARCH ARRIVALS..."
+            style={{
+              marginTop: 14,
+              width: '100%',
+              background: 'transparent',
+              border: 'none',
+              borderBottom: '1px solid #252525',
+              outline: 'none',
+              color: '#aaaaaa',
+              fontSize: 11,
+              letterSpacing: '0.08em',
+              padding: '5px 0',
+              fontFamily: 'inherit',
+            }}
+          />
+
+          {/* Tabs */}
+          <div style={{ display: 'flex', marginTop: 2 }}>
+            {(['live', 'top'] as const).map(t => (
+              <button
+                key={t}
+                onClick={() => setTab(t)}
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  borderBottom: tab === t ? `2px solid ${AMBER}` : '2px solid transparent',
+                  color: tab === t ? '#ffffff' : '#3a3a3a',
+                  fontFamily: 'inherit',
+                  fontSize: 10,
+                  fontWeight: 700,
+                  letterSpacing: '0.14em',
+                  cursor: 'pointer',
+                  padding: '8px 16px 5px',
+                }}
+              >
+                {t === 'live' ? 'LIVE ARRIVALS' : 'TOP ARRIVALS'}
+              </button>
+            ))}
           </div>
-        </div>
-
-        {/* Search */}
-        <input
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          placeholder="search arrivals..."
-          style={{
-            marginTop: 12,
-            width: '100%',
-            background: 'transparent',
-            border: 'none',
-            borderBottom: '1px solid #2a2a2a',
-            outline: 'none',
-            color: '#cccccc',
-            fontSize: 12,
-            letterSpacing: '0.04em',
-            padding: '6px 0',
-            fontFamily: 'inherit',
-          }}
-        />
-
-        {/* Tab switcher */}
-        <div style={{ display: 'flex', marginTop: 4 }}>
-          {(['live', 'top'] as const).map(t => (
-            <button
-              key={t}
-              onClick={() => setTab(t)}
-              style={{
-                background: 'transparent',
-                border: 'none',
-                borderBottom: tab === t ? `2px solid ${AMBER}` : '2px solid transparent',
-                color: tab === t ? '#ffffff' : '#444444',
-                fontFamily: 'inherit',
-                fontSize: 11,
-                fontWeight: 700,
-                letterSpacing: '0.1em',
-                cursor: 'pointer',
-                padding: '8px 16px 6px',
-              }}
-            >
-              {t === 'live' ? 'LIVE ARRIVALS' : 'TOP ARRIVALS'}
-            </button>
-          ))}
         </div>
       </div>
 
-      {/* Content */}
-      <div style={{ paddingTop: headerHeight }}>
+      {/* Centered content */}
+      <div style={{ maxWidth: MAX_W, margin: '0 auto', paddingTop: 148 }}>
 
-        {/* Column header */}
+        {/* Sticky column headers */}
         <div style={{
           display: 'grid',
           gridTemplateColumns: gridCols,
-          gap: 0,
           padding: '0 24px',
-          background: '#161616',
-          borderBottom: '1px solid #333',
+          background: '#141414',
+          borderBottom: '1px solid #2a2a2a',
+          position: 'sticky',
+          top: 148,
+          zIndex: 9,
         }}>
           {tab === 'live' ? (
             <>
               <ColHead>DOMAIN</ColHead>
-              <ColHead align="left">TLD</ColHead>
-              <ColHead align="right">ARRIVED</ColHead>
+              <ColHead>TLD</ColHead>
+              <ColHead align="right">ARRIVED (PST)</ColHead>
               <ColHead align="right">STATUS</ColHead>
             </>
           ) : (
             <>
               <ColHead align="right">#</ColHead>
-              <ColHead>DOMAIN</ColHead>
-              <ColHead align="left">TLD</ColHead>
+              <ColHead style={{ paddingLeft: 12 }}>DOMAIN</ColHead>
+              <ColHead>TLD</ColHead>
               <ColHead align="right">SCORE</ColHead>
               <ColHead align="right">STATUS</ColHead>
             </>
           )}
         </div>
 
-        {/* Rows */}
-        {tab === 'live' && visible.map(d => (
+        {/* Live arrivals — all of filtered, no cap */}
+        {tab === 'live' && filtered.map(d => (
           <div
             key={d.id}
             className={`arrivals-row${newIds.has(d.id) ? ' flip-in' : ''}`}
             style={{
               display: 'grid',
               gridTemplateColumns: LIVE_COLS,
-              gap: 0,
               padding: '0 24px',
-              borderBottom: '1px solid #1a1a1a',
+              borderBottom: '1px solid #191919',
               height: 32,
               alignItems: 'center',
             }}
@@ -260,25 +272,26 @@ export default function Page() {
             <span
               className="domain-cell"
               onClick={() => window.open(`https://${d.domain}`, '_blank')}
-              style={{ color: '#999999', fontSize: 13, cursor: 'pointer', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+              style={{ color: '#888', fontSize: 13, cursor: 'pointer', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', paddingRight: 8 }}
             >
               {getSld(d.domain)}
             </span>
             <span style={{ color: AMBER, fontSize: 12 }}>{getTld(d.domain)}</span>
-            <span style={{ color: '#555555', fontSize: 12, textAlign: 'right' }}>{formatArrived(d.shown_at)}</span>
-            <span style={{ color: AMBER, fontSize: 11, letterSpacing: '0.06em', textAlign: 'right' }}>ARRIVED</span>
+            <span style={{ color: '#444', fontSize: 11, textAlign: 'right' }}>{formatArrived(d.shown_at)}</span>
+            <span style={{ color: AMBER, fontSize: 10, letterSpacing: '0.08em', textAlign: 'right' }}>ARRIVED</span>
           </div>
         ))}
 
+        {/* Top arrivals */}
         {tab === 'top' && (
           <>
             {leaderLoading && (
-              <div style={{ color: '#444', fontSize: 12, padding: '24px', textAlign: 'center', letterSpacing: '0.08em' }}>
+              <div style={{ color: '#333', fontSize: 11, padding: '32px', textAlign: 'center', letterSpacing: '0.12em' }}>
                 LOADING...
               </div>
             )}
             {!leaderLoading && filteredLeaderWithRank.length === 0 && (
-              <div style={{ color: '#444', fontSize: 12, padding: '24px', textAlign: 'center', letterSpacing: '0.08em' }}>
+              <div style={{ color: '#333', fontSize: 11, padding: '32px', textAlign: 'center', letterSpacing: '0.12em' }}>
                 NO DATA
               </div>
             )}
@@ -289,24 +302,23 @@ export default function Page() {
                 style={{
                   display: 'grid',
                   gridTemplateColumns: TOP_COLS,
-                  gap: 0,
                   padding: '0 24px',
-                  borderBottom: '1px solid #1a1a1a',
+                  borderBottom: '1px solid #191919',
                   height: 32,
                   alignItems: 'center',
                 }}
               >
-                <span style={{ color: '#444444', fontSize: 11, textAlign: 'right' }}>{rank}</span>
+                <span style={{ color: '#333', fontSize: 11, textAlign: 'right' }}>{rank}</span>
                 <span
                   className="domain-cell"
                   onClick={() => window.open(`https://${d.domain}`, '_blank')}
-                  style={{ color: '#999999', fontSize: 13, cursor: 'pointer', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', paddingLeft: 12 }}
+                  style={{ color: '#888', fontSize: 13, cursor: 'pointer', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', paddingLeft: 12, paddingRight: 8 }}
                 >
                   {getSld(d.domain)}
                 </span>
                 <span style={{ color: AMBER, fontSize: 12 }}>{getTld(d.domain)}</span>
                 <span style={{ color: AMBER, fontSize: 12, textAlign: 'right' }}>{d.score}</span>
-                <span style={{ color: AMBER, fontSize: 11, letterSpacing: '0.06em', textAlign: 'right' }}>ARRIVED</span>
+                <span style={{ color: AMBER, fontSize: 10, letterSpacing: '0.08em', textAlign: 'right' }}>ARRIVED</span>
               </div>
             ))}
           </>
@@ -316,14 +328,15 @@ export default function Page() {
   )
 }
 
-function ColHead({ children, align = 'left' }: { children: React.ReactNode; align?: 'left' | 'right' }) {
+function ColHead({ children, align = 'left', style }: { children: React.ReactNode; align?: 'left' | 'right'; style?: React.CSSProperties }) {
   return (
     <div style={{
-      color: '#444444',
-      fontSize: 10,
-      letterSpacing: '0.1em',
-      padding: '8px 0',
+      color: '#333333',
+      fontSize: 9,
+      letterSpacing: '0.14em',
+      padding: '7px 0',
       textAlign: align,
+      ...style,
     }}>
       {children}
     </div>
