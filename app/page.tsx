@@ -57,9 +57,9 @@ export default function Page() {
         top: 22,
         left: 24,
         color: '#ffffff',
-        fontSize: 14,
+        fontSize: 18,
         fontWeight: 700,
-        letterSpacing: '-0.3px',
+        letterSpacing: '-0.5px',
         zIndex: 10,
       }}>
         domains.today
@@ -132,15 +132,15 @@ export default function Page() {
               key={d.id}
               onClick={() => window.open(`https://${d.domain}`, '_blank')}
               style={{
-                fontSize: 15,
+                fontSize: 22,
                 fontWeight: 500,
-                lineHeight: '30px',
-                color: '#888888',
+                lineHeight: '40px',
+                color: '#b0b0b0',
                 cursor: 'pointer',
-                textAlign: 'center',
+                textAlign: 'left',
               }}
               onMouseEnter={e => (e.currentTarget.style.color = '#ffffff')}
-              onMouseLeave={e => (e.currentTarget.style.color = '#888888')}
+              onMouseLeave={e => (e.currentTarget.style.color = '#b0b0b0')}
             >
               {d.domain}
             </div>
