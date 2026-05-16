@@ -9,5 +9,29 @@
 }
 
 body {
-  background: #000000;
+  background: #111111;
+}
+
+@keyframes flipIn {
+  from {
+    transform: perspective(300px) rotateX(-60deg);
+    opacity: 0;
+  }
+  to {
+    transform: perspective(300px) rotateX(0deg);
+    opacity: 1;
+  }
+}
+
+.flip-in {
+  animation: flipIn 0.35s ease-out forwards;
+  transform-origin: top center;
+}
+
+.arrivals-row:hover {
+  background: #1a1a1a !important;
+}
+
+.arrivals-row:hover .domain-cell {
+  color: #ffffff !important;
 }
