@@ -2,7 +2,7 @@ name: Reveal Domains
 
 on:
   schedule:
-    - cron: '*/2 * * * *'
+    - cron: '* * * * *'   # Every minute — loop inside reveals 1 domain/2s for 60s
   workflow_dispatch:
 
 jobs:
@@ -18,8 +18,12 @@ jobs:
       - name: Install dependencies
         run: pip install -r scripts/requirements.txt
 
-      - name: Reveal domains
-        run: python scripts/reveal.py
+      - name: Reveal 1 domain every 2 seconds for 60 seconds
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: |
+          for i in $(seq 1 30); do
+            python scripts/reveal_one.py
+            sleep 2
+          done

@@ -9,36 +9,33 @@ export default function Page() {
   const [domains, setDomains] = useState<DomainRow[]>([])
   const [search, setSearch] = useState('')
   const lastIdRef = useRef<number>(0)
-  const pendingRef = useRef<DomainRow[]>([])
 
   useEffect(() => {
+    // Initial load: newest first
     supabase
       .from('domains')
       .select('id, domain')
       .eq('shown', true)
-      .order('id', { ascending: true })
+      .order('id', { ascending: false })
       .then(({ data }) => {
         if (data?.length) {
-          lastIdRef.current = data[data.length - 1].id
-          pendingRef.current = data
+          setDomains(data)
+          lastIdRef.current = data[0].id  // highest id is first in DESC result
         }
       })
 
+    // Poll every 2s — server reveals 1 domain/2s so typically 0 or 1 new row
     const interval = setInterval(async () => {
-      if (pendingRef.current.length > 0) {
-        const next = pendingRef.current.shift()!
-        setDomains(prev => [...prev, next])
-      } else {
-        const { data } = await supabase
-          .from('domains')
-          .select('id, domain')
-          .eq('shown', true)
-          .gt('id', lastIdRef.current)
-          .order('id', { ascending: true })
-        if (data?.length) {
-          lastIdRef.current = data[data.length - 1].id
-          pendingRef.current = data
-        }
+      const { data } = await supabase
+        .from('domains')
+        .select('id, domain')
+        .eq('shown', true)
+        .gt('id', lastIdRef.current)
+        .order('id', { ascending: true })
+      if (data?.length) {
+        lastIdRef.current = data[data.length - 1].id
+        // Newest at top: reverse ASC result then prepend
+        setDomains(prev => [...[...data].reverse(), ...prev])
       }
     }, 2000)
 
