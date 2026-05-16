@@ -1,3 +1,4 @@
 supabase>=2.30.0
 websockets>=13.0
 requests>=2.31.0
+english-words>=2.0.0

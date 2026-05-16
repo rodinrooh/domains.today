@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 
 type DomainRow = { id: number; domain: string }
+type LeaderRow = { id: number; domain: string; score: number; date_added: string }
 
 export default function Page() {
   const [domains, setDomains] = useState<DomainRow[]>([])
@@ -11,15 +12,18 @@ export default function Page() {
   const [search, setSearch] = useState('')
   const lastIdRef = useRef<number>(0)
 
+  const [tab, setTab] = useState<'feed' | 'leaderboard'>('feed')
+  const [leaderboard, setLeaderboard] = useState<LeaderRow[]>([])
+  const [leaderLoading, setLeaderLoading] = useState(false)
+  const leaderLoadedRef = useRef(false)
+
   useEffect(() => {
-    // Fetch real total count (bypasses 1000-row limit)
     supabase
       .from('domains')
       .select('*', { count: 'exact', head: true })
       .eq('shown', true)
       .then(({ count }) => { if (count) setTotalCount(count) })
 
-    // Fetch recent domains for the visible list (last 1000)
     supabase
       .from('domains')
       .select('id, domain')
@@ -48,6 +52,37 @@ export default function Page() {
 
     return () => clearInterval(interval)
   }, [])
+
+  useEffect(() => {
+    if (tab !== 'leaderboard' || leaderLoadedRef.current) return
+    leaderLoadedRef.current = true
+    setLeaderLoading(true)
+
+    const today = new Date().toISOString().split('T')[0]
+    supabase
+      .from('domains')
+      .select('id, domain, score, date_added')
+      .eq('shown', true)
+      .not('score', 'is', null)
+      .eq('date_added', today)
+      .order('score', { ascending: false })
+      .limit(100)
+      .then(async ({ data }) => {
+        if (data?.length) {
+          setLeaderboard(data as LeaderRow[])
+        } else {
+          const { data: fallback } = await supabase
+            .from('domains')
+            .select('id, domain, score, date_added')
+            .eq('shown', true)
+            .not('score', 'is', null)
+            .order('score', { ascending: false })
+            .limit(100)
+          if (fallback?.length) setLeaderboard(fallback as LeaderRow[])
+        }
+        setLeaderLoading(false)
+      })
+  }, [tab])
 
   const filtered = search
     ? domains.filter(d => d.domain.includes(search.toLowerCase()))
@@ -108,73 +143,140 @@ export default function Page() {
             Every domain registered on the internet, surfaced live. Most are freshly purchased with nothing hosted yet. A new one appears every ~2 seconds.
           </div>
 
-          <input
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            placeholder="search domains..."
-            style={{
-              marginTop: 24,
-              background: 'transparent',
-              border: '1px solid #2a2a2a',
-              outline: 'none',
-              color: '#ffffff',
-              padding: '10px 16px',
-              width: '100%',
-              maxWidth: 300,
-              fontFamily: 'inherit',
-              fontSize: 13,
-              fontWeight: 400,
-              display: 'block',
-              margin: '24px auto 0',
-              textAlign: 'center',
-            }}
-          />
+          {tab === 'feed' && (
+            <>
+              <input
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                placeholder="search domains..."
+                style={{
+                  marginTop: 24,
+                  background: 'transparent',
+                  border: '1px solid #2a2a2a',
+                  outline: 'none',
+                  color: '#ffffff',
+                  padding: '10px 16px',
+                  width: '100%',
+                  maxWidth: 300,
+                  fontFamily: 'inherit',
+                  fontSize: 13,
+                  fontWeight: 400,
+                  display: 'block',
+                  margin: '24px auto 0',
+                  textAlign: 'center',
+                }}
+              />
 
-          <button
-            onClick={openRandom}
-            disabled={!domains.length}
-            style={{
-              marginTop: 10,
-              background: 'transparent',
-              border: '1px solid #2a2a2a',
-              color: domains.length ? '#666666' : '#2a2a2a',
-              fontFamily: 'inherit',
-              fontSize: 13,
-              fontWeight: 400,
-              cursor: domains.length ? 'pointer' : 'default',
-              padding: '7px 24px',
-              display: 'inline-block',
-              width: 'auto',
-              maxWidth: 160,
-            }}
-            onMouseEnter={e => { if (domains.length) { e.currentTarget.style.color = '#ffffff'; e.currentTarget.style.borderColor = '#555555' } }}
-            onMouseLeave={e => { e.currentTarget.style.color = domains.length ? '#666666' : '#2a2a2a'; e.currentTarget.style.borderColor = '#2a2a2a' }}
-          >
-            random
-          </button>
+              <button
+                onClick={openRandom}
+                disabled={!domains.length}
+                style={{
+                  marginTop: 10,
+                  background: 'transparent',
+                  border: '1px solid #2a2a2a',
+                  color: domains.length ? '#666666' : '#2a2a2a',
+                  fontFamily: 'inherit',
+                  fontSize: 13,
+                  fontWeight: 400,
+                  cursor: domains.length ? 'pointer' : 'default',
+                  padding: '7px 24px',
+                  display: 'inline-block',
+                  width: 'auto',
+                  maxWidth: 160,
+                }}
+                onMouseEnter={e => { if (domains.length) { e.currentTarget.style.color = '#ffffff'; e.currentTarget.style.borderColor = '#555555' } }}
+                onMouseLeave={e => { e.currentTarget.style.color = domains.length ? '#666666' : '#2a2a2a'; e.currentTarget.style.borderColor = '#2a2a2a' }}
+              >
+                random
+              </button>
+            </>
+          )}
 
         </div>
 
-        <div>
-          {filtered.map(d => (
-            <div
-              key={d.id}
-              onClick={() => window.open(`https://${d.domain}`, '_blank')}
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 32 }}>
+          {(['feed', 'leaderboard'] as const).map((t, i) => (
+            <button
+              key={t}
+              onClick={() => setTab(t)}
               style={{
-                fontSize: 16,
+                background: 'transparent',
+                border: '1px solid #2a2a2a',
+                color: tab === t ? '#ffffff' : '#444444',
+                fontFamily: 'inherit',
+                fontSize: 12,
                 fontWeight: 500,
-                lineHeight: '32px',
-                color: '#999999',
                 cursor: 'pointer',
-                textAlign: 'center',
+                padding: '6px 20px',
+                marginLeft: i === 1 ? -1 : 0,
               }}
-              onMouseEnter={e => (e.currentTarget.style.color = '#ffffff')}
-              onMouseLeave={e => (e.currentTarget.style.color = '#999999')}
             >
-              {d.domain}
-            </div>
+              {t}
+            </button>
           ))}
         </div>
+
+        {tab === 'feed' && (
+          <div>
+            {filtered.map(d => (
+              <div
+                key={d.id}
+                onClick={() => window.open(`https://${d.domain}`, '_blank')}
+                style={{
+                  fontSize: 16,
+                  fontWeight: 500,
+                  lineHeight: '32px',
+                  color: '#999999',
+                  cursor: 'pointer',
+                  textAlign: 'center',
+                }}
+                onMouseEnter={e => (e.currentTarget.style.color = '#ffffff')}
+                onMouseLeave={e => (e.currentTarget.style.color = '#999999')}
+              >
+                {d.domain}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {tab === 'leaderboard' && (
+          <div>
+            {leaderLoading && (
+              <div style={{ textAlign: 'center', color: '#333333', fontSize: 13 }}>loading...</div>
+            )}
+            {!leaderLoading && leaderboard.length === 0 && (
+              <div style={{ textAlign: 'center', color: '#333333', fontSize: 13 }}>no scored domains yet</div>
+            )}
+            {leaderboard.map((d, i) => (
+              <div
+                key={d.id}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 16,
+                  lineHeight: '32px',
+                }}
+              >
+                <span style={{ color: '#333333', fontSize: 12, width: 24, textAlign: 'right', flexShrink: 0 }}>
+                  {i + 1}
+                </span>
+                <span
+                  onClick={() => window.open(`https://${d.domain}`, '_blank')}
+                  style={{ fontSize: 16, fontWeight: 500, color: '#999999', cursor: 'pointer' }}
+                  onMouseEnter={e => (e.currentTarget.style.color = '#ffffff')}
+                  onMouseLeave={e => (e.currentTarget.style.color = '#999999')}
+                >
+                  {d.domain}
+                </span>
+                <span style={{ color: '#333333', fontSize: 12, width: 24, flexShrink: 0 }}>
+                  {d.score}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+
       </div>
     </main>
   )
