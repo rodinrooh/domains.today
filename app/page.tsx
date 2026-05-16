@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useMemo } from 'react'
 import { supabase } from '@/lib/supabase'
 
 type DomainRow = { id: number; domain: string; shown_at: string | null }
@@ -37,11 +37,16 @@ function formatClock(d: Date) {
   })
 }
 
-const AMBER = '#f5a623'
-const MAX_W = 860
-// Header height (compact: title block ~50px + search ~30px + tabs ~28px + padding 14 = ~122px)
-const HDR = 122
-const GAP = 20 // visual gap between header and board
+const AMBER      = '#f59e0b'
+const BLUE_MID   = '#94a3b8'
+const BOARD_BG   = '#0d111a'
+const BORDER     = '#1e2840'
+const COL_HEAD_BG = '#111520'
+const MAX_W      = 860
+const HDR        = 122
+const GAP        = 20
+const MAX_DISPLAY = 200
+const MAX_STATE   = 500
 
 const LIVE_COLS = 'minmax(0,1fr) 90px 130px 90px'
 const TOP_COLS  = '36px minmax(0,1fr) 90px 70px 90px'
@@ -59,6 +64,10 @@ export default function Page() {
   const [leaderboard, setLeader]  = useState<LeaderRow[]>([])
   const [leaderLoading, setLL]    = useState(false)
   const leaderLoadedRef           = useRef(false)
+
+  const [searchResults, setSearchResults] = useState<DomainRow[]>([])
+  const [searching, setSearching] = useState(false)
+  const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Clock
   useEffect(() => {
@@ -80,6 +89,7 @@ export default function Page() {
       .select('id, domain, shown_at')
       .eq('shown', true)
       .order('id', { ascending: false })
+      .limit(MAX_STATE)
       .then(({ data }) => {
         if (data?.length) {
           setDomains(data as DomainRow[])
@@ -101,7 +111,7 @@ export default function Page() {
         setNewIds(ids)
         if (newIdsTimerRef.current) clearTimeout(newIdsTimerRef.current)
         newIdsTimerRef.current = setTimeout(() => setNewIds(new Set()), 800)
-        setDomains(prev => [...incoming, ...prev])
+        setDomains(prev => [...incoming, ...prev].slice(0, MAX_STATE))
         setTotal(prev => prev + data.length)
       }
     }, 1000)
@@ -130,30 +140,59 @@ export default function Page() {
       })
   }, [tab])
 
-  const filtered = search
-    ? domains.filter(d => d.domain.includes(search.toLowerCase()))
-    : domains
+  // Server-side search (debounced 350ms)
+  useEffect(() => {
+    if (searchTimerRef.current) clearTimeout(searchTimerRef.current)
+    if (!search) {
+      setSearchResults([])
+      setSearching(false)
+      return
+    }
+    setSearching(true)
+    searchTimerRef.current = setTimeout(async () => {
+      const { data } = await supabase
+        .from('domains')
+        .select('id, domain, shown_at')
+        .eq('shown', true)
+        .ilike('domain', `%${search}%`)
+        .order('id', { ascending: false })
+        .limit(500)
+      setSearchResults((data as DomainRow[]) ?? [])
+      setSearching(false)
+    }, 350)
+    return () => {
+      if (searchTimerRef.current) clearTimeout(searchTimerRef.current)
+    }
+  }, [search])
 
-  const filteredLeader = leaderboard
-    .map((d, i) => ({ d, rank: i + 1 }))
-    .filter(({ d }) => !search || d.domain.includes(search.toLowerCase()))
+  const liveRows = useMemo(
+    () => search ? searchResults : domains.slice(0, MAX_DISPLAY),
+    [search, searchResults, domains]
+  )
+
+  const filteredLeader = useMemo(
+    () => leaderboard
+      .map((d, i) => ({ d, rank: i + 1 }))
+      .filter(({ d }) => !search || d.domain.toLowerCase().includes(search.toLowerCase())),
+    [search, leaderboard]
+  )
 
   const displayCount = search
-    ? (tab === 'live' ? filtered.length : filteredLeader.length)
+    ? (tab === 'live' ? (searching ? totalCount : searchResults.length) : filteredLeader.length)
     : totalCount
 
   const gridCols = tab === 'live' ? LIVE_COLS : TOP_COLS
 
   return (
-    <main style={{ background: '#111111', minHeight: '100vh' }}>
+    <main style={{ background: '#0a0d14', minHeight: '100vh' }}>
 
-      {/* ── Fixed blurred header ── */}
+      {/* Fixed blurred header */}
       <div style={{
         position: 'fixed', top: 0, left: 0, right: 0, zIndex: 10,
-        background: 'rgba(15,15,15,0.88)',
+        background: 'rgba(10,13,20,0.92)',
         backdropFilter: 'blur(16px)',
         WebkitBackdropFilter: 'blur(16px)',
-        borderBottom: '1px solid #1e1e1e',
+        borderBottom: `1px solid ${BORDER}`,
       }}>
         <div style={{ maxWidth: MAX_W, margin: '0 auto', padding: '14px 28px 0' }}>
 
@@ -166,15 +205,17 @@ export default function Page() {
               <div style={{ color: AMBER, fontSize: 11, letterSpacing: '0.22em', marginTop: 5 }}>
                 INTERNATIONAL ARRIVALS
               </div>
-              <div style={{ color: '#555', fontSize: 10, letterSpacing: '0.14em', marginTop: 4 }}>
-                {displayCount.toLocaleString()}{search ? ' MATCHING' : ' ARRIVALS'}
+              <div style={{ color: '#3a4f6a', fontSize: 10, letterSpacing: '0.14em', marginTop: 4 }}>
+                {searching
+                  ? 'SEARCHING...'
+                  : `${displayCount.toLocaleString()}${search ? ' MATCHING' : ' ARRIVALS'}`}
               </div>
             </div>
             <div style={{ textAlign: 'right', paddingTop: 1 }}>
               <div style={{ color: AMBER, fontSize: 18, letterSpacing: '0.06em' }}>
                 {now ? formatClock(now) : ' '}
               </div>
-              <div style={{ color: '#444', fontSize: 9, letterSpacing: '0.22em', marginTop: 4 }}>
+              <div style={{ color: '#2a3a50', fontSize: 9, letterSpacing: '0.22em', marginTop: 4 }}>
                 PST
               </div>
             </div>
@@ -191,9 +232,9 @@ export default function Page() {
               width: '100%',
               background: 'transparent',
               border: 'none',
-              borderBottom: '1px solid #252525',
+              borderBottom: `1px solid ${BORDER}`,
               outline: 'none',
-              color: '#aaa',
+              color: BLUE_MID,
               fontSize: 11,
               letterSpacing: '0.1em',
               padding: '5px 0 6px',
@@ -211,7 +252,7 @@ export default function Page() {
                   background: 'transparent',
                   border: 'none',
                   borderBottom: tab === t ? `2px solid ${AMBER}` : '2px solid transparent',
-                  color: tab === t ? '#fff' : '#3a3a3a',
+                  color: tab === t ? '#fff' : '#2a3a50',
                   fontFamily: 'inherit',
                   fontSize: 10,
                   letterSpacing: '0.16em',
@@ -226,15 +267,16 @@ export default function Page() {
         </div>
       </div>
 
-      {/* ── Centered content ── */}
+      {/* Centered content */}
       <div style={{ maxWidth: MAX_W, margin: '0 auto', paddingTop: HDR + GAP, paddingBottom: 60 }}>
 
-        {/* Board: visually distinct panel */}
+        {/* Board panel — overflow:clip allows position:sticky inside while still clipping visually */}
         <div style={{
           margin: '0 28px',
-          border: '1px solid #232323',
-          borderRadius: 2,
-          overflow: 'hidden',
+          border: `1px solid ${BORDER}`,
+          borderRadius: 8,
+          overflow: 'clip',
+          background: BOARD_BG,
         }}>
 
           {/* Sticky column headers */}
@@ -242,8 +284,8 @@ export default function Page() {
             display: 'grid',
             gridTemplateColumns: gridCols,
             padding: '0 16px',
-            background: '#181818',
-            borderBottom: '1px solid #2e2e2e',
+            background: COL_HEAD_BG,
+            borderBottom: `1px solid ${BORDER}`,
             position: 'sticky',
             top: HDR,
             zIndex: 9,
@@ -267,9 +309,9 @@ export default function Page() {
           </div>
 
           {/* Live rows */}
-          {tab === 'live' && filtered.map((d, i) => {
+          {tab === 'live' && liveRows.map((d, i) => {
             const isNew = newIds.has(d.id)
-            const dimmed = i > 2 && !isNew
+            const recent = !isNew && i < 5
             return (
               <div
                 key={d.id}
@@ -278,17 +320,17 @@ export default function Page() {
                   display: 'grid',
                   gridTemplateColumns: LIVE_COLS,
                   padding: '0 16px',
-                  borderBottom: '1px solid #181818',
+                  borderBottom: `1px solid #131929`,
                   height: 34,
                   alignItems: 'center',
-                  background: '#111111',
+                  background: BOARD_BG,
                 }}
               >
                 <span
                   className="domain-cell"
                   onClick={() => window.open(`https://${d.domain}`, '_blank')}
                   style={{
-                    color: isNew ? '#fff' : dimmed ? '#666' : '#bbb',
+                    color: isNew ? '#e2e8f0' : recent ? '#8ca0bc' : '#3d4f66',
                     fontSize: 14,
                     cursor: 'pointer',
                     overflow: 'hidden',
@@ -300,30 +342,56 @@ export default function Page() {
                 >
                   {getSld(d.domain)}
                 </span>
-                <span style={{ color: isNew ? AMBER : dimmed ? '#4a3a1a' : '#8a6520', fontSize: 13, letterSpacing: '0.04em' }}>
+                <span style={{
+                  color: isNew ? AMBER : recent ? '#7a5a18' : '#2e2210',
+                  fontSize: 13,
+                  letterSpacing: '0.04em',
+                }}>
                   {getTld(d.domain)}
                 </span>
-                <span style={{ color: isNew ? '#999' : dimmed ? '#383838' : '#555', fontSize: 12, textAlign: 'right', letterSpacing: '0.03em' }}>
+                <span style={{
+                  color: isNew ? '#6080a0' : recent ? '#2a3d54' : '#1a2530',
+                  fontSize: 12,
+                  textAlign: 'right',
+                  letterSpacing: '0.03em',
+                }}>
                   {formatArrived(d.shown_at)}
                 </span>
-                <span style={{ color: isNew ? AMBER : dimmed ? '#3a3020' : '#6a5010', fontSize: 11, letterSpacing: '0.1em', textAlign: 'right' }}>
+                <span style={{
+                  color: isNew ? AMBER : recent ? '#5a4010' : '#251a08',
+                  fontSize: 11,
+                  letterSpacing: '0.1em',
+                  textAlign: 'right',
+                }}>
                   ARRIVED
                 </span>
               </div>
             )
           })}
 
+          {tab === 'live' && liveRows.length === 0 && !searching && (
+            <div style={{ color: '#1e2840', fontSize: 11, padding: '32px', textAlign: 'center', letterSpacing: '0.14em' }}>
+              {search ? 'NO MATCHES' : 'LOADING...'}
+            </div>
+          )}
+
+          {tab === 'live' && searching && (
+            <div style={{ color: '#2a3a50', fontSize: 11, padding: '32px', textAlign: 'center', letterSpacing: '0.14em' }}>
+              SEARCHING...
+            </div>
+          )}
+
           {/* Top rows */}
           {tab === 'top' && (
             <>
               {leaderLoading && (
-                <div style={{ color: '#333', fontSize: 11, padding: '32px', textAlign: 'center', letterSpacing: '0.14em', background: '#111' }}>
+                <div style={{ color: '#1e2840', fontSize: 11, padding: '32px', textAlign: 'center', letterSpacing: '0.14em' }}>
                   LOADING...
                 </div>
               )}
               {!leaderLoading && filteredLeader.length === 0 && (
-                <div style={{ color: '#333', fontSize: 11, padding: '32px', textAlign: 'center', letterSpacing: '0.14em', background: '#111' }}>
-                  NO DATA
+                <div style={{ color: '#1e2840', fontSize: 11, padding: '32px', textAlign: 'center', letterSpacing: '0.14em' }}>
+                  {search ? 'NO MATCHES' : 'NO DATA'}
                 </div>
               )}
               {filteredLeader.map(({ d, rank }) => (
@@ -334,23 +402,33 @@ export default function Page() {
                     display: 'grid',
                     gridTemplateColumns: TOP_COLS,
                     padding: '0 16px',
-                    borderBottom: '1px solid #181818',
+                    borderBottom: `1px solid #131929`,
                     height: 34,
                     alignItems: 'center',
-                    background: '#111111',
+                    background: BOARD_BG,
                   }}
                 >
-                  <span style={{ color: '#333', fontSize: 11, textAlign: 'right', letterSpacing: '0.04em' }}>{rank}</span>
+                  <span style={{ color: '#2a3a50', fontSize: 11, textAlign: 'right', letterSpacing: '0.04em' }}>{rank}</span>
                   <span
                     className="domain-cell"
                     onClick={() => window.open(`https://${d.domain}`, '_blank')}
-                    style={{ color: '#bbb', fontSize: 14, cursor: 'pointer', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', paddingLeft: 12, paddingRight: 12, letterSpacing: '0.02em' }}
+                    style={{
+                      color: '#8ca0bc',
+                      fontSize: 14,
+                      cursor: 'pointer',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                      paddingLeft: 12,
+                      paddingRight: 12,
+                      letterSpacing: '0.02em',
+                    }}
                   >
                     {getSld(d.domain)}
                   </span>
-                  <span style={{ color: '#8a6520', fontSize: 13, letterSpacing: '0.04em' }}>{getTld(d.domain)}</span>
+                  <span style={{ color: '#7a5a18', fontSize: 13, letterSpacing: '0.04em' }}>{getTld(d.domain)}</span>
                   <span style={{ color: AMBER, fontSize: 13, textAlign: 'right', letterSpacing: '0.04em' }}>{d.score}</span>
-                  <span style={{ color: '#6a5010', fontSize: 11, letterSpacing: '0.1em', textAlign: 'right' }}>ARRIVED</span>
+                  <span style={{ color: '#5a4010', fontSize: 11, letterSpacing: '0.1em', textAlign: 'right' }}>ARRIVED</span>
                 </div>
               ))}
             </>
@@ -368,7 +446,7 @@ function ColHead({ children, align = 'left', style }: {
 }) {
   return (
     <div style={{
-      color: '#666',
+      color: '#2a3a50',
       fontSize: 9,
       letterSpacing: '0.18em',
       padding: '8px 0',
