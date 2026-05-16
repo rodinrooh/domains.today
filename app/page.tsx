@@ -37,14 +37,14 @@ function formatClock(d: Date) {
   })
 }
 
-const AMBER      = '#f59e0b'
-const BLUE_MID   = '#94a3b8'
-const BOARD_BG   = '#0d111a'
-const BORDER     = '#1e2840'
-const COL_HEAD_BG = '#111520'
-const MAX_W      = 860
-const HDR        = 122
-const GAP        = 20
+const AMBER       = '#f59e0b'
+const BOARD_BG    = '#0e1220'
+const BORDER      = '#2a3d58'
+const ROW_DIV     = '#182030'
+const COL_HEAD_BG = '#111828'
+const MAX_W       = 860
+const HDR         = 128
+const GAP         = 20
 const MAX_DISPLAY = 200
 const MAX_STATE   = 500
 
@@ -184,28 +184,28 @@ export default function Page() {
   const gridCols = tab === 'live' ? LIVE_COLS : TOP_COLS
 
   return (
-    <main style={{ background: '#0a0d14', minHeight: '100vh' }}>
+    <main style={{ background: '#0c1018', minHeight: '100vh' }}>
 
       {/* Fixed blurred header */}
       <div style={{
         position: 'fixed', top: 0, left: 0, right: 0, zIndex: 10,
-        background: 'rgba(10,13,20,0.92)',
+        background: 'rgba(12,16,24,0.94)',
         backdropFilter: 'blur(16px)',
         WebkitBackdropFilter: 'blur(16px)',
         borderBottom: `1px solid ${BORDER}`,
       }}>
-        <div style={{ maxWidth: MAX_W, margin: '0 auto', padding: '14px 28px 0' }}>
+        <div style={{ maxWidth: MAX_W, margin: '0 auto', padding: '16px 32px 0' }}>
 
           {/* Title row */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
             <div>
-              <div style={{ color: '#fff', fontSize: 22, letterSpacing: '0.12em', lineHeight: 1 }}>
+              <div style={{ color: '#e8edf5', fontSize: 22, letterSpacing: '0.12em', lineHeight: 1, fontWeight: 700 }}>
                 INTERNET AIRPORT
               </div>
-              <div style={{ color: AMBER, fontSize: 11, letterSpacing: '0.22em', marginTop: 5 }}>
+              <div style={{ color: AMBER, fontSize: 11, letterSpacing: '0.22em', marginTop: 6 }}>
                 INTERNATIONAL ARRIVALS
               </div>
-              <div style={{ color: '#3a4f6a', fontSize: 10, letterSpacing: '0.14em', marginTop: 4 }}>
+              <div style={{ color: '#4d6a88', fontSize: 10, letterSpacing: '0.14em', marginTop: 5 }}>
                 {searching
                   ? 'SEARCHING...'
                   : `${displayCount.toLocaleString()}${search ? ' MATCHING' : ' ARRIVALS'}`}
@@ -215,7 +215,7 @@ export default function Page() {
               <div style={{ color: AMBER, fontSize: 18, letterSpacing: '0.06em' }}>
                 {now ? formatClock(now) : ' '}
               </div>
-              <div style={{ color: '#2a3a50', fontSize: 9, letterSpacing: '0.22em', marginTop: 4 }}>
+              <div style={{ color: '#3d5570', fontSize: 9, letterSpacing: '0.22em', marginTop: 5 }}>
                 PST
               </div>
             </div>
@@ -232,12 +232,12 @@ export default function Page() {
               width: '100%',
               background: 'transparent',
               border: 'none',
-              borderBottom: `1px solid ${BORDER}`,
+              borderBottom: `1px solid #2a3d58`,
               outline: 'none',
-              color: BLUE_MID,
+              color: '#7090b0',
               fontSize: 11,
               letterSpacing: '0.1em',
-              padding: '5px 0 6px',
+              padding: '6px 0 7px',
               fontFamily: 'inherit',
             }}
           />
@@ -252,12 +252,12 @@ export default function Page() {
                   background: 'transparent',
                   border: 'none',
                   borderBottom: tab === t ? `2px solid ${AMBER}` : '2px solid transparent',
-                  color: tab === t ? '#fff' : '#2a3a50',
+                  color: tab === t ? '#e8edf5' : '#3d5570',
                   fontFamily: 'inherit',
                   fontSize: 10,
                   letterSpacing: '0.16em',
                   cursor: 'pointer',
-                  padding: '8px 18px 5px',
+                  padding: '9px 18px 6px',
                 }}
               >
                 {t === 'live' ? 'LIVE ARRIVALS' : 'TOP ARRIVALS'}
@@ -272,11 +272,12 @@ export default function Page() {
 
         {/* Board panel — overflow:clip allows position:sticky inside while still clipping visually */}
         <div style={{
-          margin: '0 28px',
+          margin: '0 32px',
           border: `1px solid ${BORDER}`,
           borderRadius: 8,
           overflow: 'clip',
           background: BOARD_BG,
+          boxShadow: '0 0 0 1px rgba(42,61,88,0.3), 0 8px 32px rgba(0,0,0,0.4)',
         }}>
 
           {/* Sticky column headers */}
@@ -311,7 +312,7 @@ export default function Page() {
           {/* Live rows */}
           {tab === 'live' && liveRows.map((d, i) => {
             const isNew = newIds.has(d.id)
-            const recent = !isNew && i < 5
+            const recent = !isNew && i < 12
             return (
               <div
                 key={d.id}
@@ -319,9 +320,9 @@ export default function Page() {
                 style={{
                   display: 'grid',
                   gridTemplateColumns: LIVE_COLS,
-                  padding: '0 16px',
-                  borderBottom: `1px solid #131929`,
-                  height: 34,
+                  padding: '0 18px',
+                  borderBottom: `1px solid ${ROW_DIV}`,
+                  height: 36,
                   alignItems: 'center',
                   background: BOARD_BG,
                 }}
@@ -330,7 +331,7 @@ export default function Page() {
                   className="domain-cell"
                   onClick={() => window.open(`https://${d.domain}`, '_blank')}
                   style={{
-                    color: isNew ? '#e2e8f0' : recent ? '#8ca0bc' : '#3d4f66',
+                    color: isNew ? '#f0f4ff' : recent ? '#a0bcd0' : '#607888',
                     fontSize: 14,
                     cursor: 'pointer',
                     overflow: 'hidden',
@@ -343,14 +344,14 @@ export default function Page() {
                   {getSld(d.domain)}
                 </span>
                 <span style={{
-                  color: isNew ? AMBER : recent ? '#7a5a18' : '#2e2210',
+                  color: isNew ? AMBER : recent ? '#c09040' : '#7a6035',
                   fontSize: 13,
                   letterSpacing: '0.04em',
                 }}>
                   {getTld(d.domain)}
                 </span>
                 <span style={{
-                  color: isNew ? '#6080a0' : recent ? '#2a3d54' : '#1a2530',
+                  color: isNew ? '#7090b0' : recent ? '#5880a0' : '#3d5870',
                   fontSize: 12,
                   textAlign: 'right',
                   letterSpacing: '0.03em',
@@ -358,7 +359,7 @@ export default function Page() {
                   {formatArrived(d.shown_at)}
                 </span>
                 <span style={{
-                  color: isNew ? AMBER : recent ? '#5a4010' : '#251a08',
+                  color: isNew ? AMBER : recent ? '#b08030' : '#6a5028',
                   fontSize: 11,
                   letterSpacing: '0.1em',
                   textAlign: 'right',
@@ -370,13 +371,13 @@ export default function Page() {
           })}
 
           {tab === 'live' && liveRows.length === 0 && !searching && (
-            <div style={{ color: '#1e2840', fontSize: 11, padding: '32px', textAlign: 'center', letterSpacing: '0.14em' }}>
+            <div style={{ color: '#3d5570', fontSize: 11, padding: '36px', textAlign: 'center', letterSpacing: '0.14em' }}>
               {search ? 'NO MATCHES' : 'LOADING...'}
             </div>
           )}
 
           {tab === 'live' && searching && (
-            <div style={{ color: '#2a3a50', fontSize: 11, padding: '32px', textAlign: 'center', letterSpacing: '0.14em' }}>
+            <div style={{ color: '#3d5570', fontSize: 11, padding: '36px', textAlign: 'center', letterSpacing: '0.14em' }}>
               SEARCHING...
             </div>
           )}
@@ -385,12 +386,12 @@ export default function Page() {
           {tab === 'top' && (
             <>
               {leaderLoading && (
-                <div style={{ color: '#1e2840', fontSize: 11, padding: '32px', textAlign: 'center', letterSpacing: '0.14em' }}>
+                <div style={{ color: '#3d5570', fontSize: 11, padding: '36px', textAlign: 'center', letterSpacing: '0.14em' }}>
                   LOADING...
                 </div>
               )}
               {!leaderLoading && filteredLeader.length === 0 && (
-                <div style={{ color: '#1e2840', fontSize: 11, padding: '32px', textAlign: 'center', letterSpacing: '0.14em' }}>
+                <div style={{ color: '#3d5570', fontSize: 11, padding: '36px', textAlign: 'center', letterSpacing: '0.14em' }}>
                   {search ? 'NO MATCHES' : 'NO DATA'}
                 </div>
               )}
@@ -401,19 +402,19 @@ export default function Page() {
                   style={{
                     display: 'grid',
                     gridTemplateColumns: TOP_COLS,
-                    padding: '0 16px',
-                    borderBottom: `1px solid #131929`,
-                    height: 34,
+                    padding: '0 18px',
+                    borderBottom: `1px solid ${ROW_DIV}`,
+                    height: 36,
                     alignItems: 'center',
                     background: BOARD_BG,
                   }}
                 >
-                  <span style={{ color: '#2a3a50', fontSize: 11, textAlign: 'right', letterSpacing: '0.04em' }}>{rank}</span>
+                  <span style={{ color: '#3d5570', fontSize: 11, textAlign: 'right', letterSpacing: '0.04em' }}>{rank}</span>
                   <span
                     className="domain-cell"
                     onClick={() => window.open(`https://${d.domain}`, '_blank')}
                     style={{
-                      color: '#8ca0bc',
+                      color: '#a0bcd0',
                       fontSize: 14,
                       cursor: 'pointer',
                       overflow: 'hidden',
@@ -426,9 +427,9 @@ export default function Page() {
                   >
                     {getSld(d.domain)}
                   </span>
-                  <span style={{ color: '#7a5a18', fontSize: 13, letterSpacing: '0.04em' }}>{getTld(d.domain)}</span>
+                  <span style={{ color: '#c09040', fontSize: 13, letterSpacing: '0.04em' }}>{getTld(d.domain)}</span>
                   <span style={{ color: AMBER, fontSize: 13, textAlign: 'right', letterSpacing: '0.04em' }}>{d.score}</span>
-                  <span style={{ color: '#5a4010', fontSize: 11, letterSpacing: '0.1em', textAlign: 'right' }}>ARRIVED</span>
+                  <span style={{ color: '#b08030', fontSize: 11, letterSpacing: '0.1em', textAlign: 'right' }}>ARRIVED</span>
                 </div>
               ))}
             </>
@@ -446,10 +447,10 @@ function ColHead({ children, align = 'left', style }: {
 }) {
   return (
     <div style={{
-      color: '#2a3a50',
+      color: '#3d5570',
       fontSize: 9,
       letterSpacing: '0.18em',
-      padding: '8px 0',
+      padding: '9px 0',
       textAlign: align,
       ...style,
     }}>

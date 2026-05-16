@@ -9,7 +9,7 @@
 }
 
 body {
-  background: #0a0d14;
+  background: #0c1018;
 }
 
 @keyframes flipIn {
@@ -29,9 +29,9 @@ body {
 }
 
 .arrivals-row:hover {
-  background: #131b2a !important;
+  background: #162030 !important;
 }
 
 .arrivals-row:hover .domain-cell {
-  color: #e2e8f4 !important;
+  color: #f0f4ff !important;
 }
