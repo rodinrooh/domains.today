@@ -46,8 +46,35 @@ export default function Page() {
     ? domains.filter(d => d.domain.includes(search.toLowerCase()))
     : domains
 
+  function openRandom() {
+    if (!domains.length) return
+    const pick = domains[Math.floor(Math.random() * domains.length)]
+    window.open(`https://${pick.domain}`, '_blank')
+  }
+
   return (
     <main style={{ background: '#000000', minHeight: '100vh' }}>
+      <button
+        onClick={openRandom}
+        disabled={!domains.length}
+        style={{
+          position: 'fixed',
+          top: 20,
+          right: 24,
+          background: 'none',
+          border: 'none',
+          color: domains.length ? '#555555' : '#2a2a2a',
+          fontFamily: 'monospace',
+          fontSize: 13,
+          cursor: domains.length ? 'pointer' : 'default',
+          padding: 0,
+          letterSpacing: '0.02em',
+        }}
+        onMouseEnter={e => { if (domains.length) e.currentTarget.style.color = '#ffffff' }}
+        onMouseLeave={e => { e.currentTarget.style.color = domains.length ? '#555555' : '#2a2a2a' }}
+      >
+        random ↗
+      </button>
       <div style={{ maxWidth: 680, margin: '0 auto', padding: '60px 24px 40px' }}>
         <div style={{ textAlign: 'center', marginBottom: 32 }}>
           <div style={{ fontSize: 72, fontWeight: 700, color: '#ffffff', lineHeight: 1, letterSpacing: '-2px' }}>
