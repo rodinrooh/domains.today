@@ -1,14 +1,6 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
-const REVEAL_SECRET = Deno.env.get('REVEAL_SECRET')!
-
-Deno.serve(async (req: Request) => {
-  const url = new URL(req.url)
-  const secret = req.headers.get('x-secret') ?? url.searchParams.get('secret')
-  if (secret !== REVEAL_SECRET) {
-    return new Response('Unauthorized', { status: 401 })
-  }
-
+Deno.serve(async (_req: Request) => {
   const supabase = createClient(
     Deno.env.get('SUPABASE_URL')!,
     Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
