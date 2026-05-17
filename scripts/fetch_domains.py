@@ -44,6 +44,21 @@ with zipfile.ZipFile(io.BytesIO(response.content)) as zf:
 
 print(f"Found {len(domains)} domains")
 
+if not is_backfill:
+    # Flip all unshown rows from previous days so only today's batch is in the reveal queue
+    cutoff = target_date.isoformat()
+    total_cleared = 0
+    while True:
+        batch = supabase.table("domains").select("id") \
+            .eq("shown", False).lt("date_added", cutoff).limit(2000).execute()
+        if not batch.data:
+            break
+        ids = [r["id"] for r in batch.data]
+        supabase.table("domains").update({"shown": True}).in_("id", ids).execute()
+        total_cleared += len(ids)
+        print(f"Flipped {total_cleared} old unshown rows so far...")
+    if total_cleared:
+        print(f"Done flipping {total_cleared} old rows — only today's batch in queue now")
 
 BATCH = 500
 for i in range(0, len(domains), BATCH):

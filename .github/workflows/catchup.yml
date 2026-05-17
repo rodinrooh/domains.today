@@ -1,0 +1,33 @@
+name: Catchup Domains
+
+on:
+  workflow_dispatch:
+    inputs:
+      cutoff:
+        description: 'Clear unshown rows with date_added before this date (YYYY-MM-DD). Defaults to today.'
+        required: false
+        default: ''
+
+jobs:
+  catchup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install -r scripts/requirements.txt
+
+      - name: Catchup old unshown domains
+        run: |
+          if [ -n "${{ github.event.inputs.cutoff }}" ]; then
+            python scripts/catchup.py --cutoff "${{ github.event.inputs.cutoff }}"
+          else
+            python scripts/catchup.py
+          fi
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
