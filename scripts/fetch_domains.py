@@ -1,3 +1,4 @@
+import argparse
 import base64
 import io
 import os
@@ -12,8 +13,18 @@ SUPABASE_KEY = os.environ["SUPABASE_SERVICE_KEY"]
 
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-yesterday = date.today() - timedelta(days=1)
-filename = yesterday.strftime("%Y-%m-%d") + ".zip"
+parser = argparse.ArgumentParser()
+parser.add_argument("--date", help="Date to fetch (YYYY-MM-DD). Defaults to yesterday.")
+args = parser.parse_args()
+
+if args.date:
+    target_date = date.fromisoformat(args.date)
+    is_backfill = True
+else:
+    target_date = date.today() - timedelta(days=1)
+    is_backfill = False
+
+filename = target_date.strftime("%Y-%m-%d") + ".zip"
 encoded = base64.b64encode(filename.encode()).decode()
 
 url = f"https://www.whoisds.com//whois-database/newly-registered-domains/{encoded}/nrd"
@@ -33,16 +44,18 @@ with zipfile.ZipFile(io.BytesIO(response.content)) as zf:
 
 print(f"Found {len(domains)} domains")
 
-# Clear any unrevealed backlog before uploading the new batch
-result = supabase.table("domains").update({"shown": True}).eq("shown", False).execute()
-cleared = len(result.data) if result.data else 0
-print(f"Cleared {cleared} backlogged domains (marked shown=true)")
+if not is_backfill:
+    # Daily run: clear any unrevealed leftovers from the previous batch
+    result = supabase.table("domains").update({"shown": True}).eq("shown", False).execute()
+    cleared = len(result.data) if result.data else 0
+    print(f"Cleared {cleared} backlogged domains (marked shown=true)")
+else:
+    print("Backfill mode: skipping backlog clear — existing queue preserved")
 
-today = date.today().isoformat()
 BATCH = 500
 for i in range(0, len(domains), BATCH):
     batch = [
-        {"domain": d, "date_added": today, "shown": False}
+        {"domain": d, "date_added": target_date.isoformat(), "shown": False}
         for d in domains[i : i + BATCH]
     ]
     supabase.table("domains").upsert(

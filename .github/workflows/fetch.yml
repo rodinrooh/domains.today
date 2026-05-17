@@ -4,6 +4,11 @@ on:
   schedule:
     - cron: '0 18 * * *'
   workflow_dispatch:
+    inputs:
+      date:
+        description: 'Date to fetch (YYYY-MM-DD). Leave blank to fetch yesterday.'
+        required: false
+        default: ''
 
 jobs:
   fetch:
@@ -19,7 +24,12 @@ jobs:
         run: pip install -r scripts/requirements.txt
 
       - name: Fetch domains
-        run: python scripts/fetch_domains.py
+        run: |
+          if [ -n "${{ github.event.inputs.date }}" ]; then
+            python scripts/fetch_domains.py --date "${{ github.event.inputs.date }}"
+          else
+            python scripts/fetch_domains.py
+          fi
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
