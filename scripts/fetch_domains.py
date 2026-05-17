@@ -44,13 +44,6 @@ with zipfile.ZipFile(io.BytesIO(response.content)) as zf:
 
 print(f"Found {len(domains)} domains")
 
-if not is_backfill:
-    # Daily run: clear any unrevealed leftovers from the previous batch
-    result = supabase.table("domains").update({"shown": True}).eq("shown", False).execute()
-    cleared = len(result.data) if result.data else 0
-    print(f"Cleared {cleared} backlogged domains (marked shown=true)")
-else:
-    print("Backfill mode: skipping backlog clear — existing queue preserved")
 
 BATCH = 500
 for i in range(0, len(domains), BATCH):

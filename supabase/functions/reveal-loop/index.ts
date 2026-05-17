@@ -21,7 +21,7 @@ Deno.serve(async (req: Request) => {
     const { data } = await supabase.rpc('reveal_next_domain')
     if (data === null || data === undefined) break
     count++
-    await new Promise(r => setTimeout(r, 1500))
+    await new Promise(r => setTimeout(r, 800))
   }
 
   return new Response(JSON.stringify({ revealed: count }), {
