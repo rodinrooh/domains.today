@@ -14,7 +14,7 @@ Deno.serve(async (req: Request) => {
     Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
   )
 
-  const deadline = Date.now() + 50_000
+  const deadline = Date.now() + 25_000
   let count = 0
 
   while (Date.now() < deadline) {

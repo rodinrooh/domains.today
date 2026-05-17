@@ -14,14 +14,14 @@ SUPABASE_KEY = os.environ["SUPABASE_SERVICE_KEY"]
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--date", help="Date to fetch (YYYY-MM-DD). Defaults to yesterday.")
+parser.add_argument("--date", help="Date to fetch (YYYY-MM-DD). Defaults to today.")
 args = parser.parse_args()
 
 if args.date:
     target_date = date.fromisoformat(args.date)
     is_backfill = True
 else:
-    target_date = date.today() - timedelta(days=1)
+    target_date = date.today()
     is_backfill = False
 
 filename = target_date.strftime("%Y-%m-%d") + ".zip"
