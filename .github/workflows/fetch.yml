@@ -2,11 +2,12 @@ name: Fetch Domains
 
 on:
   schedule:
-    - cron: '0 18 * * *'
+    - cron: '0 18 * * *'   # 11am PT — primary
+    - cron: '0 22 * * *'   # 3pm PT  — safety net (no-op if primary succeeded)
   workflow_dispatch:
     inputs:
       date:
-        description: 'Date to fetch (YYYY-MM-DD). Leave blank to fetch yesterday.'
+        description: 'Date to fetch (YYYY-MM-DD). Leave blank to fetch today.'
         required: false
         default: ''
 
@@ -23,7 +24,14 @@ jobs:
       - name: Install dependencies
         run: pip install -r scripts/requirements.txt
 
-      - name: Fetch domains
+      - name: Clear old unshown rows (non-fatal)
+        continue-on-error: true
+        run: python scripts/catchup.py
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+
+      - name: Fetch and insert domains
         run: |
           if [ -n "${{ github.event.inputs.date }}" ]; then
             python scripts/fetch_domains.py --date "${{ github.event.inputs.date }}"
