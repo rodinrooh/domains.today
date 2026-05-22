@@ -32,6 +32,8 @@ print(f"Downloading: {url}")
 
 response = requests.get(url, timeout=120)
 response.raise_for_status()
+print(f"Response status: {response.status_code}, content-type: {response.headers.get('content-type')}")
+print(f"Response preview: {response.content[:500]}")
 
 domains = []
 with zipfile.ZipFile(io.BytesIO(response.content)) as zf:
